@@ -54,9 +54,12 @@ export function searchMedication(query: string): Medication | null {
 export function getCategoryColor(category: string): string {
   const map: Record<string, string> = {
     A: '#16a34a',
-    B: '#22c55e',
+    'A/B2': '#22c55e',
+    B1: '#22c55e',
+    'B1/B2': '#22c55e',
+    B2: '#4ade80',
+    B3: '#84cc16',
     C: '#f59e0b',
-    'C/D': '#f97316',
     D: '#ea580c',
     X: '#dc2626',
   };
@@ -66,9 +69,12 @@ export function getCategoryColor(category: string): string {
 export function getCategoryBgColor(category: string): string {
   const map: Record<string, string> = {
     A: '#dcfce7',
-    B: '#dcfce7',
+    'A/B2': '#dcfce7',
+    B1: '#dcfce7',
+    'B1/B2': '#dcfce7',
+    B2: '#dcfce7',
+    B3: '#f7fee7',
     C: '#fef3c7',
-    'C/D': '#ffedd5',
     D: '#ffedd5',
     X: '#fee2e2',
   };

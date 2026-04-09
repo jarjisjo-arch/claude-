@@ -165,9 +165,10 @@ export default function HomeScreen() {
 function getCategoryColorInline(cat: string): string {
   const map: Record<string, string> = {
     A: '#16a34a',
-    B: '#22c55e',
+    B1: '#22c55e',
+    B2: '#4ade80',
+    B3: '#84cc16',
     C: '#f59e0b',
-    'C/D': '#f97316',
     D: '#ea580c',
     X: '#dc2626',
   };
