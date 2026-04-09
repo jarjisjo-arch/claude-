@@ -1,0 +1,93 @@
+{
+  "_comment": "This is a placeholder database. Replace the entries below with your own medication data. Each medication needs: id, searchTerms (lowercase), nameEn, nameAr, pregnancyCategory (A/B/C/D/X), descriptionEn, descriptionAr, warningEn, warningAr.",
+  "medications": [
+    {
+      "id": 1,
+      "searchTerms": ["amoxicillin", "amoxil", "trimox", "أموكسيسيلين", "اموكسيسيلين"],
+      "nameEn": "Amoxicillin",
+      "nameAr": "أموكسيسيلين",
+      "pregnancyCategory": "B",
+      "descriptionEn": "Amoxicillin is a penicillin-type antibiotic. FDA Pregnancy Category B: Animal studies have shown no evidence of fetal harm, and there are no adequate, well-controlled studies in pregnant women. It is generally considered one of the safer antibiotics during pregnancy.",
+      "descriptionAr": "أموكسيسيلين هو مضاد حيوي من نوع البنسيلين. فئة الحمل B وفقاً لإدارة الغذاء والدواء: لم تُظهر الدراسات على الحيوانات دليلاً على ضرر الجنين، ولا توجد دراسات كافية وخاضعة للرقابة لدى النساء الحوامل. ويُعدّ عموماً من أكثر المضادات الحيوية أماناً خلال الحمل.",
+      "warningEn": "Consult your doctor before use. Inform your doctor if you are allergic to penicillin.",
+      "warningAr": "استشيري طبيبك قبل الاستخدام. أخبري طبيبك إن كنتِ تعاني من حساسية تجاه البنسيلين."
+    },
+    {
+      "id": 2,
+      "searchTerms": ["paracetamol", "acetaminophen", "tylenol", "panadol", "calpol", "باراسيتامول", "أسيتامينوفين", "بنادول"],
+      "nameEn": "Paracetamol (Acetaminophen)",
+      "nameAr": "باراسيتامول (أسيتامينوفين)",
+      "pregnancyCategory": "B",
+      "descriptionEn": "Paracetamol is the first-choice pain reliever and fever reducer during pregnancy. It is generally considered safe in all trimesters when used at recommended doses. No increased risk of birth defects has been identified.",
+      "descriptionAr": "الباراسيتامول هو مسكن الألم وخافض الحرارة المُفضَّل أثناء الحمل. ويُعتبر آمناً بشكل عام في جميع مراحل الحمل عند استخدامه بالجرعات الموصى بها. ولم يُلاحظ أي زيادة في خطر التشوهات الخلقية.",
+      "warningEn": "Do not exceed the recommended dose. Avoid prolonged use without medical advice.",
+      "warningAr": "لا تتجاوزي الجرعة الموصى بها. تجنبي الاستخدام المطوّل دون استشارة طبية."
+    },
+    {
+      "id": 3,
+      "searchTerms": ["ibuprofen", "advil", "motrin", "nurofen", "brufen", "إيبوبروفين", "ايبوبروفين"],
+      "nameEn": "Ibuprofen",
+      "nameAr": "إيبوبروفين",
+      "pregnancyCategory": "C/D",
+      "descriptionEn": "Ibuprofen is an NSAID (non-steroidal anti-inflammatory drug). It is Category C in the first two trimesters and Category D in the third trimester. It should be avoided especially after 30 weeks of gestation as it may cause premature closure of the fetal ductus arteriosus.",
+      "descriptionAr": "إيبوبروفين هو مضاد التهاب غير ستيرويدي. يُصنَّف في الفئة C في الثلثين الأول والثاني، وفي الفئة D في الثلث الثالث. ينبغي تجنبه خاصةً بعد 30 أسبوعاً من الحمل لأنه قد يُسبب انغلاق مبكر للقناة الشريانية للجنين.",
+      "warningEn": "AVOID in the third trimester. Use with caution and only under medical supervision in the first two trimesters.",
+      "warningAr": "تجنبي الاستخدام في الثلث الثالث. استخدمي بحذر وتحت إشراف طبي فقط في الثلثين الأول والثاني."
+    },
+    {
+      "id": 4,
+      "searchTerms": ["warfarin", "coumadin", "jantoven", "وارفارين", "كومادين"],
+      "nameEn": "Warfarin",
+      "nameAr": "وارفارين",
+      "pregnancyCategory": "X",
+      "descriptionEn": "Warfarin is absolutely contraindicated during pregnancy (Category X). It crosses the placenta and can cause fetal warfarin syndrome (nasal hypoplasia, bone defects), fetal hemorrhage, central nervous system abnormalities, and fetal death.",
+      "descriptionAr": "الوارفارين موانع مطلقة أثناء الحمل (الفئة X). يعبر المشيمة ويمكن أن يُسبب متلازمة الجنين الوارفارينية (نقص تنسج الأنف، عيوب العظام)، ونزيف الجنين، وتشوهات الجهاز العصبي المركزي، ووفاة الجنين.",
+      "warningEn": "ABSOLUTELY CONTRAINDICATED in pregnancy. Immediately inform your doctor if you become pregnant while taking warfarin.",
+      "warningAr": "موانع مطلقة أثناء الحمل. أبلغي طبيبك فوراً إذا حملتِ أثناء تناول الوارفارين."
+    },
+    {
+      "id": 5,
+      "searchTerms": ["metformin", "glucophage", "fortamet", "glumetza", "ميتفورمين", "جلوكوفاج"],
+      "nameEn": "Metformin",
+      "nameAr": "ميتفورمين",
+      "pregnancyCategory": "B",
+      "descriptionEn": "Metformin is Category B. It is commonly used to treat gestational diabetes and polycystic ovary syndrome (PCOS) in pregnancy. Studies have not shown an increased risk of major birth defects.",
+      "descriptionAr": "ميتفورمين فئة B. يُستخدم على نطاق واسع لعلاج سكري الحمل ومتلازمة تكيس المبايض أثناء الحمل. لم تُظهر الدراسات زيادة في خطر التشوهات الخلقية الرئيسية.",
+      "warningEn": "Consult your doctor about appropriate dosage and monitoring during pregnancy.",
+      "warningAr": "استشيري طبيبك بشأن الجرعة المناسبة والمتابعة الطبية خلال الحمل."
+    },
+    {
+      "id": 6,
+      "searchTerms": ["azithromycin", "zithromax", "z-pak", "أزيثروميسين", "ازيثروميسين"],
+      "nameEn": "Azithromycin",
+      "nameAr": "أزيثروميسين",
+      "pregnancyCategory": "B",
+      "descriptionEn": "Azithromycin is a macrolide antibiotic classified as Category B. It is considered safe to use during pregnancy for certain infections when the benefits outweigh the risks.",
+      "descriptionAr": "أزيثروميسين هو مضاد حيوي ماكرولايد مصنف في الفئة B. ويُعتبر آمن الاستخدام خلال الحمل لعلاج بعض الالتهابات عندما تفوق الفائدة المخاطر.",
+      "warningEn": "Use only under medical supervision. Inform your doctor of all medications you are taking.",
+      "warningAr": "استخدمي تحت الإشراف الطبي فقط. أخبري طبيبك بجميع الأدوية التي تتناولينها."
+    },
+    {
+      "id": 7,
+      "searchTerms": ["omeprazole", "prilosec", "losec", "أوميبرازول", "اوميبرازول"],
+      "nameEn": "Omeprazole",
+      "nameAr": "أوميبرازول",
+      "pregnancyCategory": "C",
+      "descriptionEn": "Omeprazole (a proton pump inhibitor) is Category C. Animal studies have shown some adverse effects, and there are limited human studies. It is generally used only when the benefits outweigh the risks. Antacids or H2-blockers are usually preferred in pregnancy.",
+      "descriptionAr": "أوميبرازول (مثبط مضخة البروتون) فئة C. أظهرت الدراسات على الحيوانات بعض الآثار الضارة، وتشحّ الدراسات البشرية. ويُستخدم عموماً فقط عندما تفوق الفائدة المخاطر. يُفضَّل عادةً استخدام مضادات الحموضة أو حاصرات H2 خلال الحمل.",
+      "warningEn": "Use only if clearly needed and under medical supervision. Discuss safer alternatives with your doctor.",
+      "warningAr": "استخدمي فقط عند الضرورة الواضحة وتحت الإشراف الطبي. ناقشي مع طبيبك البدائل الأكثر أماناً."
+    },
+    {
+      "id": 8,
+      "searchTerms": ["doxycycline", "vibramycin", "doryx", "دوكسيسيكلين", "دوكسيسايكلين"],
+      "nameEn": "Doxycycline",
+      "nameAr": "دوكسيسيكلين",
+      "pregnancyCategory": "D",
+      "descriptionEn": "Doxycycline is Category D. It can cause permanent discoloration of teeth and inhibit bone growth in the fetus if used after the 4th month of pregnancy. It should be avoided in pregnancy whenever possible.",
+      "descriptionAr": "دوكسيسيكلين فئة D. يمكن أن يُسبب تلوناً دائماً للأسنان ويُثبط نمو عظام الجنين إذا استُخدم بعد الشهر الرابع من الحمل. ينبغي تجنبه خلال الحمل كلما أمكن ذلك.",
+      "warningEn": "AVOID during pregnancy. Use only if no safer alternative exists and under strict medical supervision.",
+      "warningAr": "تجنبي الاستخدام أثناء الحمل. استخدمي فقط إن لم يكن ثمة بديل أكثر أماناً وتحت إشراف طبي صارم."
+    }
+  ]
+}
