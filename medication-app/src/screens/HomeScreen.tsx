@@ -39,17 +39,23 @@ export default function HomeScreen() {
     setRecognizedName('');
 
     try {
-      const name = await recognizeMedicationFromImage(base64, mimeType as 'image/jpeg');
+      const names = await recognizeMedicationFromImage(base64, mimeType as 'image/jpeg');
 
-      if (!name || name === 'UNKNOWN') {
+      if (!names.length || names[0] === 'UNKNOWN') {
         setResult(null);
         setRecognizedName('UNKNOWN');
         setAppState('done');
         return;
       }
 
-      setRecognizedName(name);
-      const found = searchMedication(name);
+      // Try each recognized name until we find a match in the database
+      let found = null;
+      for (const name of names) {
+        found = searchMedication(name);
+        if (found) break;
+      }
+
+      setRecognizedName(names[0]);
       setResult(found);
       setAppState('done');
     } catch (error: unknown) {

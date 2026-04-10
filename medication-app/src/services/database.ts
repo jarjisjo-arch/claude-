@@ -48,6 +48,17 @@ export function searchMedication(query: string): Medication | null {
   );
   if (reverseMatch) return reverseMatch;
 
+  // 5. Word-level match — any word in query matches any word in a search term
+  const queryWords = normalizedQuery.split(/\s+/).filter((w) => w.length > 3);
+  if (queryWords.length > 0) {
+    const wordMatch = medications.find((med) =>
+      med.searchTerms.some((term) =>
+        queryWords.some((word) => term.toLowerCase().includes(word))
+      )
+    );
+    if (wordMatch) return wordMatch;
+  }
+
   return null;
 }
 
