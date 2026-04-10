@@ -24,6 +24,7 @@ export default function HomeScreen() {
   const [appState, setAppState] = useState<AppState>('idle');
   const [result, setResult] = useState<Medication | null | undefined>(undefined);
   const [recognizedName, setRecognizedName] = useState<string>('');
+  const [allDetectedNames, setAllDetectedNames] = useState<string[]>([]);
 
   const handleSearch = (query: string) => {
     setAppState('searching');
@@ -56,6 +57,7 @@ export default function HomeScreen() {
       }
 
       setRecognizedName(names[0]);
+      setAllDetectedNames(names);
       setResult(found);
       setAppState('done');
     } catch (error: unknown) {
@@ -68,6 +70,7 @@ export default function HomeScreen() {
   const handleReset = () => {
     setResult(undefined);
     setRecognizedName('');
+    setAllDetectedNames([]);
     setAppState('idle');
   };
 
@@ -151,7 +154,7 @@ export default function HomeScreen() {
                     {t.recognized}
                   </Text>
                   <Text style={[styles.recognizedName, isRTL && styles.textRTL]}>
-                    {recognizedName}
+                    {allDetectedNames.join(', ')}
                   </Text>
                 </View>
               )}

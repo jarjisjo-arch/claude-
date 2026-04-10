@@ -39,13 +39,18 @@ export async function recognizeMedicationFromImage(
               },
             },
             {
-              text: `Look at this medication image carefully. Identify all medication names visible on the packaging or label — including brand names, generic names, and active ingredients.
+              text: `Read this medication packaging image carefully. Extract the medication name(s) exactly as printed on the label.
 
-Reply with ONLY a comma-separated list of medication names in English, from most visible to least visible. No explanations, no punctuation other than commas.
+Instructions:
+- Read the EXACT text printed on the box/label for the drug name
+- Include the main brand name, generic name, and active ingredient(s) if visible
+- Reply with ONLY a comma-separated list of the names you can read, in English
+- Do NOT guess or infer — only include names actually printed on the packaging
+- If the label is in Arabic, transliterate the drug name to English
 
-Example reply: paracetamol, panadol, acetaminophen
+Example reply: augmentin, amoxicillin, clavulanate
 
-If you cannot identify any medication at all, reply with exactly: UNKNOWN`,
+If you cannot read any medication name, reply with exactly: UNKNOWN`,
             },
           ],
         },
