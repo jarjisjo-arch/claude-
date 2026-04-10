@@ -4,7 +4,6 @@
     "slug": "medication-pregnancy-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "resizeMode": "contain",
@@ -12,25 +11,41 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.jarjisjo.medicationpregnancyapp",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan medication labels.",
         "NSPhotoLibraryUsageDescription": "This app accesses your photo library to identify medications."
       }
     },
     "android": {
+      "package": "com.jarjisjo.medicationpregnancyapp",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0f766e"
       },
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES"
       ]
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "This app uses the camera to scan medication labels."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "This app accesses your photo library to identify medications.",
+          "cameraPermission": "This app uses the camera to scan medication labels."
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "anthropicApiKey": "YOUR_ANTHROPIC_API_KEY_HERE"
     }
   }
 }
