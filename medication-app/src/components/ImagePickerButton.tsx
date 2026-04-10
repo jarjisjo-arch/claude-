@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
 import { useLanguage } from '../context/LanguageContext';
 
 interface ImagePickerButtonProps {
@@ -31,10 +30,18 @@ export default function ImagePickerButton({ onImageSelected, loading }: ImagePic
       quality: 0.8,
       allowsEditing: true,
       aspect: [4, 3],
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
-      await processImage(result.assets[0].uri);
+      const asset = result.assets[0];
+      const base64 = asset.base64;
+      const mimeType = (asset.mimeType as 'image/jpeg' | 'image/png') ?? 'image/jpeg';
+      if (base64) {
+        onImageSelected(base64, mimeType);
+      } else {
+        Alert.alert('Error', 'Could not read image data.');
+      }
     }
   };
 
@@ -49,25 +56,18 @@ export default function ImagePickerButton({ onImageSelected, loading }: ImagePic
       quality: 0.8,
       allowsEditing: true,
       aspect: [4, 3],
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
-      await processImage(result.assets[0].uri);
-    }
-  };
-
-  const processImage = async (uri: string) => {
-    try {
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      // Detect mime type from extension; default to jpeg
-      const ext = uri.split('.').pop()?.toLowerCase();
-      const mimeType =
-        ext === 'png' ? 'image/png' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
-      onImageSelected(base64, mimeType);
-    } catch {
-      Alert.alert('Error', 'Failed to process image.');
+      const asset = result.assets[0];
+      const base64 = asset.base64;
+      const mimeType = (asset.mimeType as 'image/jpeg' | 'image/png') ?? 'image/jpeg';
+      if (base64) {
+        onImageSelected(base64, mimeType);
+      } else {
+        Alert.alert('Error', 'Could not read image data.');
+      }
     }
   };
 
