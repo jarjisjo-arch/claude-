@@ -39,18 +39,23 @@ export async function recognizeMedicationFromImage(
               },
             },
             {
-              text: `Read this medication packaging image carefully. Extract the medication name(s) exactly as printed on the label.
+              text: `You are a pharmacist and medical expert. Analyze this medication image using your full knowledge.
 
-Instructions:
-- Read the EXACT text printed on the box/label for the drug name
-- Include the main brand name, generic name, and active ingredient(s) if visible
-- Reply with ONLY a comma-separated list of the names you can read, in English
-- Do NOT guess or infer — only include names actually printed on the packaging
-- If the label is in Arabic, transliterate the drug name to English
+Look at everything in the image: the packaging design, text in any language, logo, colors, pill shape, and any other visual cues. Use your medical knowledge to identify what medication this is.
 
-Example reply: augmentin, amoxicillin, clavulanate
+Your response must be a comma-separated list of names for this medication in English, including:
+1. The generic/active ingredient name (most important)
+2. The brand name if you recognize it
+3. Any alternative names or common spellings
 
-If you cannot read any medication name, reply with exactly: UNKNOWN`,
+Order them from most confident to least confident.
+
+Examples:
+- "amoxicillin, amoxil, trimox"
+- "ibuprofen, advil, brufen, nurofen"
+- "paracetamol, acetaminophen, panadol, tylenol"
+
+Reply with ONLY the comma-separated list. If you truly cannot identify any medication, reply with exactly: UNKNOWN`,
             },
           ],
         },
