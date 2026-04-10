@@ -27,7 +27,7 @@ export default function ImagePickerButton({ onImageSelected, loading }: ImagePic
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.8,
       allowsEditing: true,
       aspect: [4, 3],
