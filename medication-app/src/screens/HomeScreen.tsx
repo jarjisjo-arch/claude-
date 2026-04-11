@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import SearchBar from '../components/SearchBar';
 import ImagePickerButton from '../components/ImagePickerButton';
 import MedicationCard from '../components/MedicationCard';
@@ -16,6 +17,11 @@ import LanguageToggle from '../components/LanguageToggle';
 import { useLanguage } from '../context/LanguageContext';
 import { searchMedication, Medication } from '../services/database';
 import { recognizeMedicationFromImage } from '../services/aiService';
+
+// Replace with your real Ad Unit ID from AdMob after publishing
+const adUnitId = __DEV__
+  ? TestIds.BANNER
+  : 'ca-app-pub-3940256099942544/6300978111'; // TODO: replace with real ad unit ID
 
 type AppState = 'idle' | 'searching' | 'analyzing' | 'done';
 
@@ -167,6 +173,14 @@ export default function HomeScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Ad banner fixed at bottom */}
+      <View style={styles.adContainer}>
+        <BannerAd
+          unitId={adUnitId}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -344,5 +358,9 @@ const styles = StyleSheet.create({
   textRTL: {
     textAlign: 'right',
     writingDirection: 'rtl',
+  },
+  adContainer: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
   },
 });
