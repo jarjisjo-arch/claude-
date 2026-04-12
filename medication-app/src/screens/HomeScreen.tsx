@@ -21,7 +21,7 @@ import { recognizeMedicationFromImage } from '../services/aiService';
 // Replace with your real Ad Unit ID from AdMob after publishing
 const adUnitId = __DEV__
   ? TestIds.BANNER
-  : 'ca-app-pub-3940256099942544/6300978111'; // TODO: replace with real ad unit ID
+  : 'ca-app-pub-1024257026229576/6392253802';
 
 type AppState = 'idle' | 'searching' | 'analyzing' | 'done';
 
