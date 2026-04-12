@@ -2,7 +2,7 @@ export type Language = 'en' | 'ar';
 
 export const translations = {
   en: {
-    appName: 'MedPregnancy',
+    appName: 'Pregna AI',
     appSubtitle: 'Medication Safety in Pregnancy',
     searchPlaceholder: 'Enter medication name...',
     searchButton: 'Search',
@@ -35,7 +35,7 @@ export const translations = {
     safetyNote: 'Safety Note',
   },
   ar: {
-    appName: 'دواء الحمل',
+    appName: 'آمن AI',
     appSubtitle: 'سلامة الدواء أثناء الحمل',
     searchPlaceholder: 'أدخلي اسم الدواء...',
     searchButton: 'بحث',
