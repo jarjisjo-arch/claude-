@@ -62,6 +62,28 @@ export function searchMedication(query: string): Medication | null {
   return null;
 }
 
+/** Result of searching one ingredient from a combination medication */
+export interface IngredientResult {
+  names: string[];         // all name variants Gemini returned for this ingredient
+  matchedName: string;     // the name that found a DB match (or first name if not found)
+  medication: Medication | null;
+}
+
+/** Danger rank — higher = more dangerous. Used to sort combination results. */
+export const CATEGORY_RANK: Record<string, number> = {
+  X: 7, D: 6, C: 5, B3: 4, B2: 3, 'B1/B2': 3, 'A/B2': 2, B1: 2, A: 1,
+};
+
+/** Returns the most dangerous category across all found ingredients, or null if none found. */
+export function getOverallCategory(results: IngredientResult[]): string | null {
+  const found = results.filter((r) => r.medication !== null);
+  if (found.length === 0) return null;
+  return found.reduce((worst, r) => {
+    const cat = r.medication!.pregnancyCategory;
+    return (CATEGORY_RANK[cat] ?? 0) > (CATEGORY_RANK[worst] ?? 0) ? cat : worst;
+  }, found[0].medication!.pregnancyCategory);
+}
+
 export function getCategoryColor(category: string): string {
   const map: Record<string, string> = {
     A: '#16a34a',

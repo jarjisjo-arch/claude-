@@ -15,7 +15,7 @@ import ImagePickerButton from '../components/ImagePickerButton';
 import MedicationCard from '../components/MedicationCard';
 import LanguageToggle from '../components/LanguageToggle';
 import { useLanguage } from '../context/LanguageContext';
-import { searchMedication, Medication } from '../services/database';
+import { searchMedication, Medication, IngredientResult, CATEGORY_RANK, getOverallCategory } from '../services/database';
 import { recognizeMedicationFromImage } from '../services/aiService';
 
 // Replace with your real Ad Unit ID from AdMob after publishing
@@ -30,13 +30,14 @@ export default function HomeScreen() {
   const [appState, setAppState] = useState<AppState>('idle');
   const [result, setResult] = useState<Medication | null | undefined>(undefined);
   const [recognizedName, setRecognizedName] = useState<string>('');
-  const [allDetectedNames, setAllDetectedNames] = useState<string[]>([]);
+  const [ingredientResults, setIngredientResults] = useState<IngredientResult[]>([]);
 
   const handleSearch = (query: string) => {
     setAppState('searching');
     const found = searchMedication(query);
     setResult(found);
     setRecognizedName('');
+    setIngredientResults([]);
     setAppState('done');
   };
 
@@ -44,27 +45,40 @@ export default function HomeScreen() {
     setAppState('analyzing');
     setResult(undefined);
     setRecognizedName('');
+    setIngredientResults([]);
 
     try {
-      const names = await recognizeMedicationFromImage(base64, mimeType as 'image/jpeg');
+      const groups = await recognizeMedicationFromImage(base64, mimeType as 'image/jpeg');
 
-      if (!names.length || names[0] === 'UNKNOWN') {
+      if (!groups.length || groups[0][0] === 'UNKNOWN') {
         setResult(null);
         setRecognizedName('UNKNOWN');
         setAppState('done');
         return;
       }
 
-      // Try each recognized name until we find a match in the database
-      let found = null;
-      for (const name of names) {
-        found = searchMedication(name);
-        if (found) break;
-      }
+      // Search each ingredient group independently
+      const results: IngredientResult[] = groups.map((names) => {
+        let found: Medication | null = null;
+        let matchedName = names[0];
+        for (const name of names) {
+          found = searchMedication(name);
+          if (found) { matchedName = name; break; }
+        }
+        return { names, matchedName, medication: found };
+      });
 
-      setRecognizedName(names[0]);
-      setAllDetectedNames(names);
-      setResult(found);
+      // Sort: most dangerous first (X → D → C → B3 → B2 → B1 → A → not found)
+      results.sort((a, b) => {
+        const rankA = a.medication ? (CATEGORY_RANK[a.medication.pregnancyCategory] ?? 0) : -1;
+        const rankB = b.medication ? (CATEGORY_RANK[b.medication.pregnancyCategory] ?? 0) : -1;
+        return rankB - rankA;
+      });
+
+      setIngredientResults(results);
+      setRecognizedName(groups[0][0]);
+      // For single ingredients, also set the simple result for backward compat
+      if (results.length === 1) setResult(results[0].medication);
       setAppState('done');
     } catch (error: unknown) {
       setAppState('idle');
@@ -76,7 +90,7 @@ export default function HomeScreen() {
   const handleReset = () => {
     setResult(undefined);
     setRecognizedName('');
-    setAllDetectedNames([]);
+    setIngredientResults([]);
     setAppState('idle');
   };
 
@@ -152,21 +166,12 @@ export default function HomeScreen() {
           )}
 
           {/* Results */}
-          {appState === 'done' && result !== undefined && (
+          {appState === 'done' && (result !== undefined || ingredientResults.length > 0) && (
             <View style={styles.resultSection}>
-              {recognizedName && recognizedName !== 'UNKNOWN' && (
-                <View style={[styles.recognizedBanner, isRTL && styles.recognizedBannerRTL]}>
-                  <Text style={[styles.recognizedLabel, isRTL && styles.textRTL]}>
-                    {t.recognized}
-                  </Text>
-                  <Text style={[styles.recognizedName, isRTL && styles.textRTL]}>
-                    {allDetectedNames.join(', ')}
-                  </Text>
-                </View>
-              )}
               <MedicationCard
-                medication={result}
+                medication={ingredientResults.length > 0 ? (getOverallCategory(ingredientResults) ? ingredientResults.find(r => r.medication)?.medication ?? null : null) : result}
                 recognizedName={recognizedName}
+                ingredientResults={ingredientResults.length > 0 ? ingredientResults : undefined}
                 onReset={handleReset}
               />
             </View>
