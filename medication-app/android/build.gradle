@@ -31,15 +31,6 @@ if (System.getProperty('os.name').toLowerCase().contains('windows')) {
 }
 
 allprojects {
-    // Force kotlin-stdlib to 1.9.25 so google-mobile-ads can't pull in 2.1.0
-    configurations.all {
-        resolutionStrategy {
-            force "org.jetbrains.kotlin:kotlin-stdlib:1.9.25"
-            force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.25"
-            force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.25"
-        }
-    }
-
     repositories {
         maven {
             // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm

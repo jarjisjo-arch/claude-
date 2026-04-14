@@ -9,7 +9,6 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import SearchBar from '../components/SearchBar';
 import ImagePickerButton from '../components/ImagePickerButton';
 import MedicationCard from '../components/MedicationCard';
@@ -18,10 +17,6 @@ import { useLanguage } from '../context/LanguageContext';
 import { searchMedication, Medication, IngredientResult, CATEGORY_RANK, getOverallCategory } from '../services/database';
 import { recognizeMedicationFromImage } from '../services/aiService';
 
-// Replace with your real Ad Unit ID from AdMob after publishing
-const adUnitId = __DEV__
-  ? TestIds.BANNER
-  : 'ca-app-pub-1024257026229576/6392253802';
 
 type AppState = 'idle' | 'searching' | 'analyzing' | 'done';
 
@@ -180,12 +175,6 @@ export default function HomeScreen() {
       </KeyboardAvoidingView>
 
       {/* Ad banner fixed at bottom */}
-      <View style={styles.adContainer}>
-        <BannerAd
-          unitId={adUnitId}
-          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        />
-      </View>
     </SafeAreaView>
   );
 }
