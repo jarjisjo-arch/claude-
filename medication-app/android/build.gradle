@@ -23,9 +23,11 @@ buildscript {
 
 apply plugin: "com.facebook.react.rootproject"
 
-// Redirect all build output to D: drive to avoid filling C:
-subprojects {
-    layout.buildDirectory.set(new File("D:/medication-app-build/${project.name}"))
+// On Windows, redirect build output to D: drive to avoid filling C:
+if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+    subprojects {
+        layout.buildDirectory.set(new File("D:/medication-app-build/${project.name}"))
+    }
 }
 
 allprojects {
