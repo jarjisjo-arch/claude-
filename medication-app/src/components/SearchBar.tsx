@@ -19,17 +19,16 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
   const [query, setQuery] = useState('');
 
   const handleSearch = () => {
-    if (query.trim()) {
-      onSearch(query.trim());
-    }
+    if (query.trim()) onSearch(query.trim());
   };
 
   return (
     <View style={[styles.container, isRTL && styles.containerRTL]}>
+      <Text style={styles.searchIcon}>🔍</Text>
       <TextInput
         style={[styles.input, isRTL && styles.inputRTL]}
         placeholder={t.searchPlaceholder}
-        placeholderTextColor="#94a3b8"
+        placeholderTextColor="#9ca3af"
         value={query}
         onChangeText={setQuery}
         onSubmitEditing={handleSearch}
@@ -58,51 +57,48 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    gap: 10,
     alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 50,
+    paddingLeft: 16,
+    paddingRight: 6,
+    paddingVertical: 6,
+    gap: 8,
+    elevation: 3,
+    shadowColor: '#006a61',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   containerRTL: {
     flexDirection: 'row-reverse',
+    paddingLeft: 6,
+    paddingRight: 16,
+  },
+  searchIcon: {
+    fontSize: 16,
   },
   input: {
     flex: 1,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: '#1e293b',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    fontSize: 15,
+    color: '#181c1c',
+    paddingVertical: 10,
   },
   inputRTL: {
     textAlign: 'right',
   },
   button: {
-    backgroundColor: '#0f766e',
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 80,
-    shadowColor: '#0f766e',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: '#006a61',
+    borderRadius: 50,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
   },
   buttonDisabled: {
     backgroundColor: '#5eead4',
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
 });
