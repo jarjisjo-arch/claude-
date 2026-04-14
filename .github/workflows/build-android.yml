@@ -27,7 +27,7 @@ jobs:
           java-version: '17'
 
       - name: Install Android NDK
-        run: sdkmanager "ndk;30.0.14904198"
+        run: $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;30.0.14904198"
 
       - name: Install npm dependencies
         working-directory: medication-app
