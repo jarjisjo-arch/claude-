@@ -48,26 +48,45 @@ jobs:
         working-directory: medication-app/android
         run: |
           set -o pipefail
-          ./gradlew assembleDebug 2>&1 | tee /tmp/gradle-output.txt; exit ${PIPESTATUS[0]}
-
-      - name: Show errors on failure
-        if: failure()
-        run: grep -E "^e: |error:|FAILED|What went wrong" /tmp/gradle-output.txt | head -80 || cat /tmp/gradle-output.txt | tail -60
+          ./gradlew assembleDebug 2>&1 | tee /tmp/gradle-output.txt
+          exit ${PIPESTATUS[0]}
 
       - name: Post error as PR comment
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_NUMBER: ${{ github.run_number }}
+          REPO: ${{ github.repository }}
         run: |
-          ERRORS=$(grep -E "^e: |error:|FAILED|What went wrong|Execution failed" /tmp/gradle-output.txt 2>/dev/null | head -80)
-          if [ -z "$ERRORS" ]; then
-            ERRORS=$(tail -60 /tmp/gradle-output.txt 2>/dev/null || echo "Build log not found")
-          fi
-          curl -s -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Content-Type: application/json" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/1/comments" \
-            -d "{\"body\": \"### Build #${{ github.run_number }} failed\n\`\`\`\n$(echo "$ERRORS" | head -80 | sed 's/\\/\\\\/g; s/"/\\"/g; s/$/\\n/' | tr -d '\n')\n\`\`\`\"}"
+          python3 - <<'PYEOF'
+          import json, urllib.request, os
+
+          try:
+              with open('/tmp/gradle-output.txt') as f:
+                  lines = f.readlines()
+              keywords = ['error:', 'FAILED', 'What went wrong', 'Execution failed', '^e: ']
+              errors = [l for l in lines if any(k in l for k in keywords)]
+              body = ''.join(errors[:80]) if errors else ''.join(lines[-60:])
+          except Exception as e:
+              body = f'Could not read build log: {e}'
+
+          comment = f"### Build #{os.environ['RUN_NUMBER']} failed\n```\n{body[:3000]}\n```"
+          data = json.dumps({'body': comment}).encode()
+          repo = os.environ['REPO']
+          req = urllib.request.Request(
+              f'https://api.github.com/repos/{repo}/issues/1/comments',
+              data=data,
+              headers={
+                  'Authorization': f"Bearer {os.environ['GH_TOKEN']}",
+                  'Content-Type': 'application/json',
+              }
+          )
+          try:
+              urllib.request.urlopen(req)
+              print('Comment posted successfully')
+          except Exception as e:
+              print(f'Failed to post comment: {e}')
+          PYEOF
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
