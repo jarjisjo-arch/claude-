@@ -39,39 +39,36 @@ export async function recognizeMedicationFromImage(
               inline_data: { mime_type: mimeType, data: base64Image },
             },
             {
-              text: `You are a pharmacist and medical expert. Analyze this medication image carefully.
+              text: `You are a pharmacist. Look at this medication image and list ALL active ingredients.
 
-Identify ALL active ingredients in this product. Many medications are combinations with 2, 3, or more active ingredients.
+IMPORTANT: Many medications contain 2, 3, or 4 active ingredients. You MUST list every single one — do not stop after the first ingredient.
 
-For EACH active ingredient, write one line containing its names separated by commas (generic name first, then brand names and alternative spellings).
+For each active ingredient, write one line with all its names separated by commas (generic name first).
 
-Rules:
-- One ingredient per line
-- Names on the same line are different names for THE SAME ingredient
-- Each line is a DIFFERENT ingredient
-- Use English names only
+Format — one ingredient per line:
+genericName, brandName, alternativeSpelling
 
 Examples:
 
-Single ingredient medication:
+Single ingredient:
 ibuprofen, advil, brufen, nurofen
 
-Two-ingredient combination:
+Two ingredients:
 amoxicillin, amoxil, trimox
-clavulanic acid, clavulanate, augmentin
+clavulanic acid, clavulanate
 
-Three-ingredient combination:
+Three ingredients:
 trimethoprim
 sulfamethoxazole, sulphamethoxazole
 codeine, methylmorphine
 
-Reply with ONLY the ingredient lines. If you truly cannot identify any medication, reply with exactly: UNKNOWN`,
+Output ONLY the ingredient lines, nothing else. If you cannot identify any medication, output exactly: UNKNOWN`,
             },
           ],
         },
       ],
       generationConfig: {
-        maxOutputTokens: 200,
+        maxOutputTokens: 500,
         temperature: 0,
       },
     }),
