@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLanguage } from '../context/LanguageContext';
 
 interface SearchBarProps {
@@ -24,11 +25,13 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
 
   return (
     <View style={[styles.container, isRTL && styles.containerRTL]}>
-      <Text style={styles.searchIcon}>🔍</Text>
+      <View style={styles.iconWrap}>
+        <MaterialCommunityIcons name="magnify" size={22} color="#6e7977" />
+      </View>
       <TextInput
         style={[styles.input, isRTL && styles.inputRTL]}
         placeholder={t.searchPlaceholder}
-        placeholderTextColor="#9ca3af"
+        placeholderTextColor="#bdc9c6"
         value={query}
         onChangeText={setQuery}
         onSubmitEditing={handleSearch}
@@ -42,7 +45,7 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
         style={[styles.button, loading && styles.buttonDisabled]}
         onPress={handleSearch}
         disabled={loading}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
       >
         {loading ? (
           <ActivityIndicator size="small" color="#ffffff" />
@@ -59,46 +62,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    borderRadius: 50,
-    paddingLeft: 16,
+    borderRadius: 9999,
+    paddingLeft: 8,
     paddingRight: 6,
     paddingVertical: 6,
-    gap: 8,
-    elevation: 3,
-    shadowColor: '#006a61',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    gap: 4,
+    shadowColor: '#181c1c',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 24,
+    elevation: 4,
   },
   containerRTL: {
     flexDirection: 'row-reverse',
-    paddingLeft: 6,
-    paddingRight: 16,
   },
-  searchIcon: {
-    fontSize: 16,
+  iconWrap: {
+    paddingLeft: 14,
+    paddingRight: 2,
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     color: '#181c1c',
-    paddingVertical: 10,
+    fontWeight: '500',
+    paddingVertical: 12,
   },
   inputRTL: {
     textAlign: 'right',
   },
   button: {
     backgroundColor: '#006a61',
-    borderRadius: 50,
-    paddingHorizontal: 22,
-    paddingVertical: 12,
+    borderRadius: 9999,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
   },
   buttonDisabled: {
-    backgroundColor: '#5eead4',
+    backgroundColor: '#77d7ca',
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
   },
 });

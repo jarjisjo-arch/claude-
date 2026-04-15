@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   Medication,
   IngredientResult,
@@ -9,6 +10,35 @@ import {
 } from '../services/database';
 import { useLanguage } from '../context/LanguageContext';
 
+// ── Color helpers ──────────────────────────────────────────────────────────
+// Maps the design system's category colors exactly
+function catBadgeColor(cat: string): string {
+  const map: Record<string, string> = {
+    A:  '#006a61',
+    B1: '#256862',
+    B2: '#256862',
+    B3: '#256862',
+    C:  '#825400',
+    D:  '#d35400',
+    X:  '#ba1a1a',
+  };
+  return map[cat] ?? '#6e7977';
+}
+
+function catBadgeBg(cat: string): string {
+  const map: Record<string, string> = {
+    A:  'rgba(0,106,97,0.1)',
+    B1: 'rgba(37,104,98,0.1)',
+    B2: 'rgba(37,104,98,0.1)',
+    B3: 'rgba(37,104,98,0.1)',
+    C:  'rgba(130,84,0,0.1)',
+    D:  'rgba(211,84,0,0.1)',
+    X:  '#ffdad6',
+  };
+  return map[cat] ?? '#f0f4f3';
+}
+
+// ── Props ──────────────────────────────────────────────────────────────────
 interface MedicationCardProps {
   medication: Medication | null;
   recognizedName?: string;
@@ -16,6 +46,7 @@ interface MedicationCardProps {
   onReset: () => void;
 }
 
+// ── Main component ─────────────────────────────────────────────────────────
 export default function MedicationCard({
   medication,
   recognizedName,
@@ -24,7 +55,9 @@ export default function MedicationCard({
 }: MedicationCardProps) {
   const { t, language, isRTL } = useLanguage();
 
-  // Combination result (image scan with multiple ingredients)
+  const ar = (en: string, arStr: string) => language === 'ar' ? arStr : en;
+
+  // Combination result (multi-ingredient image scan)
   if (ingredientResults && ingredientResults.length > 0) {
     return (
       <CombinationCard
@@ -33,6 +66,7 @@ export default function MedicationCard({
         isRTL={isRTL}
         language={language}
         t={t}
+        ar={ar}
       />
     );
   }
@@ -40,18 +74,17 @@ export default function MedicationCard({
   // Not found
   if (!medication) {
     return (
-      <View style={styles.card}>
-        <View style={styles.notFoundCenter}>
-          <Text style={styles.notFoundEmoji}>🔍</Text>
-          <Text style={[styles.notFoundTitle, isRTL && styles.textRTL]}>{t.notFound}</Text>
-          <Text style={[styles.notFoundDesc, isRTL && styles.textRTL]}>{t.notFoundDesc}</Text>
-          {recognizedName && recognizedName !== 'UNKNOWN' && (
-            <Text style={[styles.recognizedText, isRTL && styles.textRTL]}>
-              {t.recognized} {recognizedName}
-            </Text>
-          )}
-        </View>
+      <View style={styles.notFoundCard}>
+        <MaterialCommunityIcons name="magnify" size={64} color="#bdc9c6" style={styles.notFoundIcon} />
+        <Text style={[styles.notFoundTitle, isRTL && styles.textRTL]}>{t.notFound}</Text>
+        <Text style={[styles.notFoundDesc, isRTL && styles.textRTL]}>{t.notFoundDesc}</Text>
+        {recognizedName && recognizedName !== 'UNKNOWN' && (
+          <Text style={[styles.notFoundRecog, isRTL && styles.textRTL]}>
+            {t.recognized} {recognizedName}
+          </Text>
+        )}
         <TouchableOpacity style={styles.resetBtn} onPress={onReset} activeOpacity={0.85}>
+          <MaterialCommunityIcons name="magnify" size={20} color="#ffffff" />
           <Text style={styles.resetBtnText}>{t.searchAnother}</Text>
         </TouchableOpacity>
       </View>
@@ -59,147 +92,196 @@ export default function MedicationCard({
   }
 
   // Single medication result
-  const name = language === 'ar' ? medication.nameAr : medication.nameEn;
+  const name        = language === 'ar' ? medication.nameAr        : medication.nameEn;
   const description = language === 'ar' ? medication.descriptionAr : medication.descriptionEn;
-  const warning = language === 'ar' ? medication.warningAr : medication.warningEn;
-  const catCol = getCategoryColor(medication.pregnancyCategory);
-  const catBg = getCategoryBgColor(medication.pregnancyCategory);
-  const catDesc = t.categories[medication.pregnancyCategory as keyof typeof t.categories] ?? medication.pregnancyCategory;
+  const warning     = language === 'ar' ? medication.warningAr     : medication.warningEn;
+  const cat         = medication.pregnancyCategory;
+  const badgeColor  = catBadgeColor(cat);
+  const badgeBg     = catBadgeBg(cat);
+  const catDesc     = t.categories[cat as keyof typeof t.categories] ?? cat;
 
   return (
-    <View style={styles.card}>
-      {/* Large category circle */}
-      <View style={styles.categoryCenter}>
-        <Text style={[styles.categoryOverallLabel, isRTL && styles.textRTL]}>
-          {t.pregnancyCategoryLabel}
-        </Text>
-        <View style={[styles.categoryCircle, { backgroundColor: catBg }]}>
-          <Text style={[styles.categoryCircleText, { color: catCol }]}>
-            {medication.pregnancyCategory}
+    <View style={styles.screen}>
+      {/* Title block */}
+      <View style={[styles.titleRow, isRTL && styles.rowRev]}>
+        <View style={styles.titleIconBox}>
+          <MaterialCommunityIcons name="pill" size={24} color="#ffffff" />
+        </View>
+        <View style={styles.titleText}>
+          <Text style={[styles.titleMain, isRTL && styles.textRTL]}>{name}</Text>
+          <Text style={[styles.titleSub, isRTL && styles.textRTL]}>
+            {ar('Single Ingredient', 'مكوّن واحد')}
           </Text>
         </View>
-        <Text style={[styles.categoryDesc, { color: catCol }, isRTL && styles.textRTL]}>
-          {catDesc}
-        </Text>
       </View>
 
-      {/* Medication name */}
-      <View style={styles.nameBlock}>
-        <Text style={[styles.medName, isRTL && styles.textRTL]}>{name}</Text>
-        {language === 'ar' && (
-          <Text style={styles.latinName}>{medication.nameEn}</Text>
-        )}
-      </View>
+      {/* Overall Safety Card */}
+      <View style={[styles.safetyCard, { backgroundColor: badgeBg }]}>
+        <View style={[styles.safetyCardInner, isRTL && styles.safetyCardInnerRev]}>
+          {/* Large pulsing badge */}
+          <View style={styles.badgeWrap}>
+            <View style={[styles.badgePulse, { backgroundColor: badgeColor + '30' }]} />
+            <View style={[styles.badge, { backgroundColor: badgeColor }]}>
+              <Text style={styles.badgeLetter}>{cat}</Text>
+            </View>
+          </View>
 
-      {/* Description with tonal background */}
-      <View style={[styles.descBlock, { backgroundColor: catBg }]}>
-        <Text style={[styles.descText, isRTL && styles.textRTL]}>{description}</Text>
+          {/* Info */}
+          <View style={styles.safetyInfo}>
+            <View style={[styles.safetyChip, { backgroundColor: badgeColor + '18' }]}>
+              <Text style={[styles.safetyChipText, { color: badgeColor }]}>
+                {ar('PREGNANCY CATEGORY', 'فئة الحمل')}
+              </Text>
+            </View>
+            <Text style={[styles.safetyTitle, isRTL && styles.textRTL]}>
+              {catDesc}
+            </Text>
+            <Text style={[styles.safetyBody, isRTL && styles.textRTL]}>{description}</Text>
+          </View>
+        </View>
+
+        {/* Decorative blur circle */}
+        <View style={styles.decorBlob} pointerEvents="none" />
       </View>
 
       {/* Critical Medical Note */}
-      <View style={styles.warningBlock}>
-        <View style={[styles.warningHeader, isRTL && styles.rowReverse]}>
-          <Text style={styles.warningEmoji}>⚠️</Text>
-          <Text style={styles.warningTitle}>
-            {language === 'ar' ? 'ملاحظة طبية مهمة' : 'Critical Medical Note'}
-          </Text>
+      <View style={styles.criticalNote}>
+        <View style={[styles.criticalNoteHeader, isRTL && styles.rowRev]}>
+          <View style={styles.warningIconBox}>
+            <MaterialCommunityIcons name="alert" size={20} color="#ba1a1a" />
+          </View>
+          <View style={styles.criticalNoteText}>
+            <Text style={styles.criticalNoteTitle}>
+              {ar('Critical Medical Note', 'ملاحظة طبية مهمة')}
+            </Text>
+            <Text style={[styles.criticalNoteBody, isRTL && styles.textRTL]}>{warning}</Text>
+          </View>
         </View>
-        <Text style={[styles.warningText, isRTL && styles.textRTL]}>{warning}</Text>
       </View>
 
       <Text style={[styles.disclaimer, isRTL && styles.textRTL]}>{t.warning}</Text>
 
+      {/* Search Another button */}
       <TouchableOpacity style={styles.resetBtn} onPress={onReset} activeOpacity={0.85}>
+        <MaterialCommunityIcons name="magnify" size={20} color="#ffffff" />
         <Text style={styles.resetBtnText}>{t.searchAnother}</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Combination card — image scan with multiple active ingredients
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ── Combination card ───────────────────────────────────────────────────────
 interface CombinationCardProps {
   ingredientResults: IngredientResult[];
   onReset: () => void;
   isRTL: boolean;
   language: string;
   t: any;
+  ar: (en: string, arStr: string) => string;
 }
 
-function CombinationCard({ ingredientResults, onReset, isRTL, language, t }: CombinationCardProps) {
-  const overallCategory = getOverallCategory(ingredientResults);
-  const overallColor = overallCategory ? getCategoryColor(overallCategory) : '#6b7280';
-  const overallBg = overallCategory ? getCategoryBgColor(overallCategory) : '#f3f4f6';
+function CombinationCard({ ingredientResults, onReset, isRTL, language, t, ar }: CombinationCardProps) {
+  const overallCat   = getOverallCategory(ingredientResults);
+  const badgeColor   = overallCat ? catBadgeColor(overallCat) : '#6e7977';
+  const badgeBg      = overallCat ? catBadgeBg(overallCat)    : '#f0f4f3';
 
   const worstIngredient = ingredientResults.find((r) => r.medication !== null);
-  const worstWarning = worstIngredient?.medication
+  const worstWarning    = worstIngredient?.medication
     ? language === 'ar'
       ? worstIngredient.medication.warningAr
       : worstIngredient.medication.warningEn
     : null;
 
-  const overallLabel = language === 'ar' ? 'فئة السلامة الإجمالية' : 'OVERALL SAFETY CATEGORY';
-  const ingredientsLabel = language === 'ar' ? 'المكونات الفعّالة' : 'Active Ingredients';
-  const notInDb = language === 'ar' ? 'غير موجود في قاعدة البيانات' : 'Not in database';
-  const criticalNote = language === 'ar' ? 'ملاحظة طبية مهمة' : 'Critical Medical Note';
+  const overallCatDesc = overallCat
+    ? t.categories[overallCat as keyof typeof t.categories] ?? overallCat
+    : ar('Not in database', 'غير موجود في قاعدة البيانات');
 
   return (
-    <View style={styles.card}>
-      {/* Overall category circle */}
-      <View style={styles.categoryCenter}>
-        <Text style={[styles.categoryOverallLabel, isRTL && styles.textRTL]}>{overallLabel}</Text>
-        {overallCategory ? (
-          <>
-            <View style={[styles.categoryCircle, { backgroundColor: overallBg }]}>
-              <Text style={[styles.categoryCircleText, { color: overallColor }]}>
-                {overallCategory}
-              </Text>
-            </View>
-            <Text style={[styles.categoryDesc, { color: overallColor }, isRTL && styles.textRTL]}>
-              {t.categories[overallCategory as keyof typeof t.categories] ?? overallCategory}
-            </Text>
-          </>
-        ) : (
-          <View style={[styles.categoryCircle, { backgroundColor: '#f3f4f6' }]}>
-            <Text style={[styles.categoryCircleText, { color: '#6b7280' }]}>?</Text>
-          </View>
-        )}
+    <View style={styles.screen}>
+
+      {/* Title block */}
+      <View style={[styles.titleRow, isRTL && styles.rowRev]}>
+        <View style={styles.titleIconBox}>
+          <MaterialCommunityIcons name="pill" size={24} color="#ffffff" />
+        </View>
+        <View style={styles.titleText}>
+          <Text style={[styles.titleMain, isRTL && styles.textRTL]}>
+            {ar('Combination Medication', 'دواء مركب')}
+          </Text>
+          <Text style={[styles.titleSub, isRTL && styles.textRTL]}>
+            {ar('Multiple Ingredient Analysis', 'تحليل المكونات المتعددة')}
+          </Text>
+        </View>
       </View>
 
-      {/* Ingredients breakdown */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionLabel, isRTL && styles.textRTL]}>
-          {ingredientsLabel} ({ingredientResults.length})
-        </Text>
-        <View style={styles.ingredientList}>
+      {/* Overall Safety Card */}
+      <View style={[styles.safetyCard, { backgroundColor: badgeBg }]}>
+        <View style={[styles.safetyCardInner, isRTL && styles.safetyCardInnerRev]}>
+          {/* Large pulsing badge */}
+          <View style={styles.badgeWrap}>
+            <View style={[styles.badgePulse, { backgroundColor: badgeColor + '30' }]} />
+            <View style={[styles.badge, { backgroundColor: badgeColor }]}>
+              <Text style={styles.badgeLetter}>{overallCat ?? '?'}</Text>
+            </View>
+          </View>
+
+          {/* Info */}
+          <View style={styles.safetyInfo}>
+            <View style={[styles.safetyChip, { backgroundColor: badgeColor + '18' }]}>
+              <Text style={[styles.safetyChipText, { color: badgeColor }]}>
+                {ar('OVERALL SAFETY CATEGORY', 'فئة السلامة الإجمالية')}
+              </Text>
+            </View>
+            <Text style={[styles.safetyTitle, isRTL && styles.textRTL]}>
+              {overallCatDesc}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.decorBlob} pointerEvents="none" />
+      </View>
+
+      {/* Active Ingredients */}
+      <View style={styles.ingredientsSection}>
+        <View style={[styles.ingredientsSectionHeader, isRTL && styles.rowRev]}>
+          <Text style={[styles.ingredientsSectionTitle, isRTL && styles.textRTL]}>
+            {ar('Active Ingredients', 'المكونات الفعّالة')}
+          </Text>
+          <Text style={styles.ingredientsCount}>
+            {ingredientResults.length} {ar('Elements Found', 'عنصر')}
+          </Text>
+        </View>
+
+        <View style={styles.ingredientsList}>
           {ingredientResults.map((item, index) => {
-            const cat = item.medication?.pregnancyCategory;
-            const color = cat ? getCategoryColor(cat) : '#9ca3af';
-            const bg = cat ? getCategoryBgColor(cat) : '#f3f4f6';
-            const medName = item.medication
-              ? language === 'ar'
-                ? item.medication.nameAr
-                : item.medication.nameEn
+            const cat      = item.medication?.pregnancyCategory;
+            const color    = cat ? catBadgeColor(cat)  : '#9ca3af';
+            const bg       = cat ? catBadgeBg(cat)     : '#f3f4f6';
+            const medName  = item.medication
+              ? language === 'ar' ? item.medication.nameAr : item.medication.nameEn
               : item.names[0];
-            const catDesc = cat
-              ? t.categories[cat as keyof typeof t.categories] ?? cat
-              : notInDb;
+            const medType  = item.medication
+              ? (language === 'ar' ? item.medication.descriptionAr : item.medication.descriptionEn)
+                  .split('.')[0]
+              : ar('Unknown substance', 'مادة غير معروفة');
 
             return (
-              <View
-                key={index}
-                style={[styles.ingredientItem, { backgroundColor: bg }, isRTL && styles.rowReverse]}
-              >
-                <View style={[styles.ingredientBadge, { backgroundColor: color }]}>
-                  <Text style={styles.ingredientBadgeText}>{cat ?? '?'}</Text>
+              <View key={index} style={[styles.ingredientRow, isRTL && styles.rowRev]}>
+                {/* Science icon */}
+                <View style={[styles.ingredientIconBox, { backgroundColor: '#ffffff' }]}>
+                  <MaterialCommunityIcons name="flask" size={20} color={color} />
                 </View>
+
+                {/* Name + type */}
                 <View style={styles.ingredientInfo}>
                   <Text style={[styles.ingredientName, isRTL && styles.textRTL]}>{medName}</Text>
-                  <Text style={[styles.ingredientCat, { color }, isRTL && styles.textRTL]}>
-                    {catDesc}
+                  <Text style={[styles.ingredientType, isRTL && styles.textRTL]} numberOfLines={1}>
+                    {medType}
                   </Text>
+                </View>
+
+                {/* Category badge pill */}
+                <View style={[styles.ingredientCatBadge, { backgroundColor: color }]}>
+                  <Text style={styles.ingredientCatBadgeText}>{cat ?? '?'}</Text>
                 </View>
               </View>
             );
@@ -207,220 +289,333 @@ function CombinationCard({ ingredientResults, onReset, isRTL, language, t }: Com
         </View>
       </View>
 
-      {/* Critical medical note from worst ingredient */}
+      {/* Critical Medical Note */}
       {worstWarning && (
-        <View style={styles.warningBlock}>
-          <View style={[styles.warningHeader, isRTL && styles.rowReverse]}>
-            <Text style={styles.warningEmoji}>⚠️</Text>
-            <Text style={styles.warningTitle}>{criticalNote}</Text>
+        <View style={styles.criticalNote}>
+          <View style={[styles.criticalNoteHeader, isRTL && styles.rowRev]}>
+            <View style={styles.warningIconBox}>
+              <MaterialCommunityIcons name="alert" size={20} color="#ba1a1a" />
+            </View>
+            <View style={styles.criticalNoteText}>
+              <Text style={styles.criticalNoteTitle}>
+                {ar('Critical Medical Note', 'ملاحظة طبية مهمة')}
+              </Text>
+              <Text style={[styles.criticalNoteBody, isRTL && styles.textRTL]}>{worstWarning}</Text>
+            </View>
           </View>
-          <Text style={[styles.warningText, isRTL && styles.textRTL]}>{worstWarning}</Text>
         </View>
       )}
 
       <Text style={[styles.disclaimer, isRTL && styles.textRTL]}>{t.warning}</Text>
 
+      {/* Search Another button */}
       <TouchableOpacity style={styles.resetBtn} onPress={onReset} activeOpacity={0.85}>
+        <MaterialCommunityIcons name="magnify" size={20} color="#ffffff" />
         <Text style={styles.resetBtnText}>{t.searchAnother}</Text>
       </TouchableOpacity>
+
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ── Styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
+  screen: {
+    gap: 20,
+  },
+  rowRev: { flexDirection: 'row-reverse' },
+  textRTL: { textAlign: 'right', writingDirection: 'rtl' },
+
+  // ── Title row ──────────────────────────────────────────────────────────
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 16,
+  },
+  titleIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#14857a',
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#006a61',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 5,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  // Category circle
-  categoryCenter: {
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 4,
-  },
-  categoryOverallLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#4b6b68',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  categoryCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryCircleText: {
-    fontSize: 36,
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
-  categoryDesc: {
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  // Name block
-  nameBlock: {
+  titleText: {
+    flex: 1,
     gap: 2,
   },
-  medName: {
-    fontSize: 22,
+  titleMain: {
+    fontSize: 26,
     fontWeight: '800',
     color: '#181c1c',
+    letterSpacing: -0.5,
   },
-  latinName: {
-    fontSize: 13,
-    color: '#4b6b68',
-    fontStyle: 'italic',
-  },
-  // Description
-  descBlock: {
-    borderRadius: 14,
-    padding: 14,
-  },
-  descText: {
+  titleSub: {
     fontSize: 14,
-    color: '#181c1c',
-    lineHeight: 22,
+    color: '#3e4947',
+    fontWeight: '500',
   },
-  // Warning
-  warningBlock: {
-    backgroundColor: '#fff7ed',
-    borderRadius: 14,
-    padding: 14,
-    gap: 8,
+
+  // ── Overall safety card ────────────────────────────────────────────────
+  safetyCard: {
+    borderRadius: 32,
+    padding: 28,
+    overflow: 'hidden',
+    shadowColor: '#181c1c',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 24,
+    elevation: 4,
   },
-  warningHeader: {
+  safetyCardInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 24,
   },
-  rowReverse: {
+  safetyCardInnerRev: {
     flexDirection: 'row-reverse',
   },
-  warningEmoji: {
-    fontSize: 16,
-  },
-  warningTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#9a3412',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  warningText: {
-    fontSize: 13,
-    color: '#7c2d12',
-    lineHeight: 20,
-  },
-  // Ingredients section
-  section: {
-    gap: 10,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#4b6b68',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  ingredientList: {
-    gap: 8,
-  },
-  ingredientItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    padding: 12,
-    gap: 12,
-  },
-  ingredientBadge: {
-    width: 40,
-    height: 28,
-    borderRadius: 8,
+  badgeWrap: {
+    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+    width: 120,
+    height: 120,
+    flexShrink: 0,
   },
-  ingredientBadgeText: {
+  badgePulse: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  badge: {
+    width: 104,
+    height: 104,
+    borderRadius: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 6,
+    borderColor: 'rgba(255,255,255,0.3)',
+    shadowColor: '#181c1c',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  badgeLetter: {
+    fontSize: 52,
+    fontWeight: '900',
     color: '#ffffff',
-    fontSize: 11,
+    letterSpacing: -1,
+  },
+  safetyInfo: {
+    flex: 1,
+    gap: 8,
+  },
+  safetyChip: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 9999,
+  },
+  safetyChipText: {
+    fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  safetyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#181c1c',
+    lineHeight: 24,
+  },
+  safetyBody: {
+    fontSize: 13,
+    color: '#3e4947',
+    lineHeight: 20,
+  },
+  decorBlob: {
+    position: 'absolute',
+    top: -60,
+    right: -60,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+
+  // ── Ingredients ────────────────────────────────────────────────────────
+  ingredientsSection: {
+    gap: 16,
+  },
+  ingredientsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  ingredientsSectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#181c1c',
+  },
+  ingredientsCount: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#006a61',
+  },
+  ingredientsList: {
+    gap: 12,
+  },
+  ingredientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: '#f0f4f3',
+    borderRadius: 24,
+    padding: 16,
+  },
+  ingredientIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#181c1c',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   ingredientInfo: {
     flex: 1,
     gap: 2,
   },
   ingredientName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     color: '#181c1c',
   },
-  ingredientCat: {
+  ingredientType: {
     fontSize: 12,
-    lineHeight: 16,
+    color: '#3e4947',
   },
-  // Not found state
-  notFoundCenter: {
+  ingredientCatBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  ingredientCatBadgeText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+
+  // ── Critical Medical Note ──────────────────────────────────────────────
+  criticalNote: {
+    backgroundColor: 'rgba(186,26,26,0.07)',
+    borderRadius: 28,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(186,26,26,0.07)',
+  },
+  criticalNoteHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 14,
+  },
+  warningIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(186,26,26,0.12)',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 16,
+    justifyContent: 'center',
+    flexShrink: 0,
   },
-  notFoundEmoji: {
-    fontSize: 48,
-    marginBottom: 4,
+  criticalNoteText: {
+    flex: 1,
+    gap: 4,
+  },
+  criticalNoteTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#ba1a1a',
+  },
+  criticalNoteBody: {
+    fontSize: 13,
+    color: '#3e4947',
+    lineHeight: 20,
+  },
+
+  // ── Not found ──────────────────────────────────────────────────────────
+  notFoundCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 32,
+    padding: 32,
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#181c1c',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 24,
+    elevation: 4,
+  },
+  notFoundIcon: {
+    marginBottom: 8,
   },
   notFoundTitle: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#181c1c',
     textAlign: 'center',
   },
   notFoundDesc: {
     fontSize: 14,
-    color: '#4b6b68',
+    color: '#3e4947',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
   },
-  recognizedText: {
+  notFoundRecog: {
     fontSize: 13,
     color: '#006a61',
     fontStyle: 'italic',
     textAlign: 'center',
   },
-  // Disclaimer
+
+  // ── Disclaimer ─────────────────────────────────────────────────────────
   disclaimer: {
     fontSize: 12,
-    color: '#9ca3af',
+    color: '#6e7977',
     textAlign: 'center',
     fontStyle: 'italic',
     lineHeight: 18,
   },
-  // Reset / Search Another button — full-width teal pill
+
+  // ── Reset button ───────────────────────────────────────────────────────
   resetBtn: {
     backgroundColor: '#006a61',
-    borderRadius: 50,
-    paddingVertical: 14,
+    borderRadius: 9999,
+    paddingVertical: 18,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    shadowColor: '#006a61',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 6,
   },
   resetBtnText: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '700',
-  },
-  textRTL: {
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
 });
