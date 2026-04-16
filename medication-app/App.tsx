@@ -8,7 +8,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <LanguageProvider>
-        <StatusBar style="light" backgroundColor="#0f766e" />
+        <StatusBar style="dark" backgroundColor="#f6faf9" />
         <HomeScreen />
       </LanguageProvider>
     </SafeAreaProvider>

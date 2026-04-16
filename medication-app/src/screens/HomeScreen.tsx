@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import SearchBar from '../components/SearchBar';
 import MedicationCard from '../components/MedicationCard';
+import HistoryScreen from './HistoryScreen';
+import GuideScreen from './GuideScreen';
 import { useLanguage } from '../context/LanguageContext';
 import {
   searchMedication,
@@ -26,25 +28,57 @@ import { recognizeMedicationFromImage } from '../services/aiService';
 import * as ImagePicker from 'expo-image-picker';
 
 type AppState = 'idle' | 'searching' | 'analyzing' | 'done';
+type Tab = 'home' | 'history' | 'guide';
 
-// Bottom nav item definitions
-const NAV_ITEMS = [
-  { icon: 'shield-heart' as const, label: 'SAFETY', labelAr: 'السلامة' },
-  { icon: 'camera' as const,       label: 'SCAN',   labelAr: 'مسح'     },
-  { icon: 'history' as const,      label: 'HISTORY', labelAr: 'السجل'  },
-  { icon: 'book-open-variant' as const, label: 'GUIDE', labelAr: 'الدليل' },
-];
+export interface SearchRecord {
+  id: string;
+  query: string;
+  timestamp: Date;
+  medication: Medication | null;
+  ingredientResults: IngredientResult[];
+  searchType: 'text' | 'image';
+  overallCategory: string | null;
+}
 
 export default function HomeScreen() {
   const { t, language, isRTL, toggleLanguage } = useLanguage();
   const insets = useSafeAreaInsets();
+
+  // Navigation
+  const [currentTab, setCurrentTab] = useState<Tab>('home');
+
+  // Search state
   const [appState, setAppState] = useState<AppState>('idle');
   const [result, setResult] = useState<Medication | null | undefined>(undefined);
-  const [recognizedName, setRecognizedName] = useState<string>('');
+  const [recognizedName, setRecognizedName] = useState('');
   const [ingredientResults, setIngredientResults] = useState<IngredientResult[]>([]);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  // History
+  const [searchHistory, setSearchHistory] = useState<SearchRecord[]>([]);
 
+  const ar = (en: string, arStr: string) => language === 'ar' ? arStr : en;
+
+  // ── Save to history ────────────────────────────────────────────────────────
+  const saveHistory = (
+    query: string,
+    med: Medication | null,
+    ingredients: IngredientResult[],
+    type: 'text' | 'image'
+  ) => {
+    const overall = ingredients.length > 0 ? getOverallCategory(ingredients) : med?.pregnancyCategory ?? null;
+    const record: SearchRecord = {
+      id: Date.now().toString(),
+      query,
+      timestamp: new Date(),
+      medication: med,
+      ingredientResults: ingredients,
+      searchType: type,
+      overallCategory: overall,
+    };
+    setSearchHistory(prev => [record, ...prev].slice(0, 50));
+  };
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSearch = (query: string) => {
     setAppState('searching');
     const found = searchMedication(query);
@@ -52,9 +86,11 @@ export default function HomeScreen() {
     setRecognizedName('');
     setIngredientResults([]);
     setAppState('done');
+    saveHistory(query, found, [], 'text');
   };
 
   const handleImageResult = async (base64: string, mimeType: string) => {
+    setCurrentTab('home');
     setAppState('analyzing');
     setResult(undefined);
     setRecognizedName('');
@@ -67,6 +103,7 @@ export default function HomeScreen() {
         setResult(null);
         setRecognizedName('UNKNOWN');
         setAppState('done');
+        saveHistory('Unknown', null, [], 'image');
         return;
       }
 
@@ -90,6 +127,7 @@ export default function HomeScreen() {
       setRecognizedName(groups[0][0]);
       if (results.length === 1) setResult(results[0].medication);
       setAppState('done');
+      saveHistory(groups[0][0], results[0]?.medication ?? null, results, 'image');
     } catch (error: unknown) {
       setAppState('idle');
       Alert.alert('Error', error instanceof Error ? error.message : t.imageError);
@@ -125,279 +163,221 @@ export default function HomeScreen() {
 
   // ── Derived state ──────────────────────────────────────────────────────────
   const isLoading = appState === 'searching' || appState === 'analyzing';
-  const isResults = appState === 'done' && (result !== undefined || ingredientResults.length > 0);
-  // Safety (0) active on home; Scan (1) active on results
-  const activeNavIndex = isResults ? 1 : 0;
+  const isResults = currentTab === 'home' && appState === 'done' &&
+    (result !== undefined || ingredientResults.length > 0);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  const ar = (en: string, arStr: string) => language === 'ar' ? arStr : en;
+  const activeNavIndex =
+    currentTab === 'history' ? 2 :
+    currentTab === 'guide'   ? 3 :
+    isResults                ? 1 : 0;
+
+  // ── Nav handler ────────────────────────────────────────────────────────────
+  const handleNavPress = (index: number) => {
+    if (index === 0) {
+      setCurrentTab('home');
+      if (isResults) handleReset();
+    } else if (index === 1) {
+      takePhoto();
+    } else if (index === 2) {
+      setCurrentTab('history');
+    } else if (index === 3) {
+      setCurrentTab('guide');
+    }
+  };
+
+  const NAV = [
+    { icon: 'shield-heart' as const, label: ar('SAFETY', 'السلامة') },
+    { icon: 'camera'       as const, label: ar('SCAN',   'مسح')    },
+    { icon: 'history'      as const, label: ar('HISTORY','السجل')  },
+    { icon: 'book-open-variant' as const, label: ar('GUIDE','الدليل') },
+  ];
 
   return (
     <View style={styles.root}>
 
-      {/* ── Top App Bar ────────────────────────────────────────────────────── */}
-      <View style={[styles.header, { paddingTop: insets.top + 6 }, isRTL && styles.rowRev]}>
-        <View style={[styles.headerBrand, isRTL && styles.rowRev]}>
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <View style={[styles.header, { paddingTop: insets.top + 6 },
+        isRTL && styles.rowRev]}>
+        <View style={[styles.brand, isRTL && styles.rowRev]}>
           <MaterialCommunityIcons name="spa" size={26} color="#006a61" />
-          <Text style={styles.appTitle}>Pregna AI</Text>
+          <Text style={styles.brandText}>Pregna AI</Text>
         </View>
         <TouchableOpacity style={styles.langBtn} onPress={toggleLanguage} activeOpacity={0.7}>
-          <MaterialCommunityIcons name="translate" size={18} color="#006a61" />
+          <MaterialCommunityIcons name="translate" size={17} color="#006a61" />
           <Text style={styles.langBtnText}>EN/AR</Text>
         </TouchableOpacity>
       </View>
 
-      {/* ── Scrollable content ─────────────────────────────────────────────── */}
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
+      {/* ── Content ─────────────────────────────────────────────────────── */}
+      {currentTab === 'history' ? (
+        <HistoryScreen history={searchHistory} language={language} isRTL={isRTL} t={t} />
+      ) : currentTab === 'guide' ? (
+        <GuideScreen language={language} isRTL={isRTL} />
+      ) : (
+        <KeyboardAvoidingView style={styles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView style={styles.flex}
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}>
 
-          {/* ── IDLE HOME SCREEN ─────────────────────────────────────────── */}
-          {!isResults && !isLoading && (
-            <>
-              {/* Hero section */}
-              <View style={styles.heroSection}>
-                {/* Decorative background blobs */}
-                <View style={styles.heroBlobTR} pointerEvents="none" />
-                <View style={styles.heroBlobBL} pointerEvents="none" />
+            {/* ── IDLE HOME ─────────────────────────────────────────────── */}
+            {!isResults && !isLoading && (
+              <>
+                {/* Hero */}
+                <View style={styles.hero}>
+                  <View style={styles.heroBlobTR} pointerEvents="none" />
+                  <View style={styles.heroBlobBL} pointerEvents="none" />
+                  <View style={styles.heroInner}>
+                    <Text style={[styles.heroTagline, isRTL && styles.rtl]}>
+                      {language === 'ar' ? (
+                        <>{'الأمان لكِ ولـ'}<Text style={styles.accent}>{'طفلكِ الصغير'}</Text>{'.'}</>
+                      ) : (
+                        <>{'Safety for you\nand your '}<Text style={styles.accent}>little one</Text>{'.'}</>
+                      )}
+                    </Text>
+                    <SearchBar onSearch={handleSearch} loading={appState === 'searching'} />
+                  </View>
+                </View>
 
-                <View style={styles.heroInner}>
-                  <Text style={[styles.heroTagline, isRTL && styles.textRTL]}>
-                    {language === 'ar' ? (
-                      <>
-                        {'الأمان لكِ ولـ'}
-                        <Text style={styles.heroAccent}>{'طفلكِ الصغير'}</Text>
-                        {'.'}
-                      </>
-                    ) : (
-                      <>
-                        {'Safety for you\nand your '}
-                        <Text style={styles.heroAccent}>little one</Text>
-                        {'.'}
-                      </>
+                {/* Action cards */}
+                <View style={[styles.row, isRTL && styles.rowRev]}>
+                  <TouchableOpacity style={styles.actionCard} onPress={takePhoto} activeOpacity={0.85}>
+                    <View style={styles.actionTop}>
+                      <View style={[styles.actionIconBox, { backgroundColor: 'rgba(0,106,97,0.12)' }]}>
+                        <MaterialCommunityIcons name="camera" size={30} color="#006a61" />
+                      </View>
+                      <MaterialCommunityIcons name="arrow-top-right" size={18} color="#6e7977" />
+                    </View>
+                    <Text style={[styles.actionTitle, isRTL && styles.rtl]}>{t.cameraButton}</Text>
+                    <Text style={[styles.actionDesc, isRTL && styles.rtl]}>
+                      {ar('Instant scan your medication for analysis.', 'التقطي صورة للدواء للتحليل الفوري.')}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.actionCard} onPress={pickFromGallery} activeOpacity={0.85}>
+                    <View style={styles.actionTop}>
+                      <View style={[styles.actionIconBox, { backgroundColor: 'rgba(37,104,98,0.1)' }]}>
+                        <MaterialCommunityIcons name="file-upload" size={30} color="#256862" />
+                      </View>
+                      <MaterialCommunityIcons name="arrow-top-right" size={18} color="#6e7977" />
+                    </View>
+                    <Text style={[styles.actionTitle, isRTL && styles.rtl]}>{t.galleryButton}</Text>
+                    <Text style={[styles.actionDesc, isRTL && styles.rtl]}>
+                      {ar('Choose a photo from your gallery.', 'اختاري صورة من معرض الصور.')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Category Guide */}
+                <View style={styles.catSection}>
+                  <Text style={styles.catRef}>{ar('REFERENCE', 'مرجع')}</Text>
+                  <Text style={[styles.catHeading, isRTL && styles.rtl]}>
+                    {ar('Medication Categories', 'تصنيفات الأدوية')}
+                  </Text>
+                  <Text style={[styles.catSubtitle, isRTL && styles.rtl]}>
+                    {ar(
+                      'Safety ratings established by global health authorities during pregnancy.',
+                      'تصنيفات السلامة المعتمدة من السلطات الصحية العالمية خلال الحمل.'
                     )}
                   </Text>
-                  {/* Unified search bar inside hero */}
-                  <SearchBar onSearch={handleSearch} loading={appState === 'searching'} />
-                </View>
-              </View>
 
-              {/* Quick Actions Bento — 2 cards */}
-              <View style={[styles.actionsRow, isRTL && styles.rowRev]}>
-
-                {/* Take Photo */}
-                <TouchableOpacity style={styles.actionCard} onPress={takePhoto} activeOpacity={0.85}>
-                  <View style={styles.actionCardTop}>
-                    <View style={styles.cameraIconBox}>
-                      <MaterialCommunityIcons name="camera" size={34} color="#006a61" />
-                    </View>
-                    <MaterialCommunityIcons name="arrow-top-right" size={20} color="#6e7977" />
-                  </View>
-                  <View style={styles.actionCardBottom}>
-                    <Text style={[styles.actionCardTitle, isRTL && styles.textRTL]}>{t.cameraButton}</Text>
-                    <Text style={[styles.actionCardDesc, isRTL && styles.textRTL]}>
-                      {ar(
-                        'Instant scan your medication packaging for immediate safety analysis.',
-                        'التقطي صورة للدواء للتحليل الفوري.'
-                      )}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-
-                {/* Upload Image */}
-                <TouchableOpacity style={styles.actionCard} onPress={pickFromGallery} activeOpacity={0.85}>
-                  <View style={styles.actionCardTop}>
-                    <View style={styles.uploadIconBox}>
-                      <MaterialCommunityIcons name="file-upload" size={34} color="#256862" />
-                    </View>
-                    <MaterialCommunityIcons name="arrow-top-right" size={20} color="#6e7977" />
-                  </View>
-                  <View style={styles.actionCardBottom}>
-                    <Text style={[styles.actionCardTitle, isRTL && styles.textRTL]}>{t.galleryButton}</Text>
-                    <Text style={[styles.actionCardDesc, isRTL && styles.textRTL]}>
-                      {ar(
-                        'Choose a clear photo from your gallery to check safety ratings.',
-                        'اختاري صورة واضحة من معرضك للتحقق من تصنيف السلامة.'
-                      )}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-
-              {/* Category Guide */}
-              <View style={styles.catGuide}>
-                <Text style={styles.catGuideRef}>
-                  {ar('REFERENCE', 'مرجع')}
-                </Text>
-                <Text style={[styles.catGuideHeading, isRTL && styles.textRTL]}>
-                  {ar('Medication Categories', 'تصنيفات الأدوية')}
-                </Text>
-                <Text style={[styles.catGuideSubtitle, isRTL && styles.textRTL]}>
-                  {ar(
-                    'Understanding the safety ratings established by global health authorities during pregnancy.',
-                    'فهم تصنيفات السلامة المعتمدة من السلطات الصحية العالمية خلال الحمل.'
-                  )}
-                </Text>
-
-                {/* Row 1: Category A (large) + B1/B2/B3 (compact row) */}
-                <View style={[styles.catRow, isRTL && styles.rowRev]}>
-                  {/* Category A — prominent card */}
+                  {/* Category A — featured full-width */}
                   <View style={styles.catCardA}>
-                    <View style={[styles.catCardATop, isRTL && styles.rowRev]}>
-                      <View style={[styles.catCircle, { backgroundColor: '#006a61' }]}>
-                        <Text style={styles.catCircleLetter}>A</Text>
-                      </View>
-                      <Text style={styles.catCardALabel}>{ar('Safe to use', 'آمن للاستخدام')}</Text>
+                    <View style={[styles.catCircle, { backgroundColor: '#006a61' }]}>
+                      <Text style={styles.catLetter}>A</Text>
                     </View>
-                    <Text style={[styles.catCardADesc, isRTL && styles.textRTL]}>
-                      {ar(
-                        'Controlled studies show no risk to the fetus in the first or later trimesters.',
-                        'دراسات موثوقة تُثبت عدم وجود خطر على الجنين في أي مرحلة.'
-                      )}
-                    </Text>
+                    <View style={styles.catInfo}>
+                      <Text style={[styles.catLabel, isRTL && styles.rtl]}>
+                        {ar('Safe to use', 'آمن للاستخدام')}
+                      </Text>
+                      <Text style={[styles.catDesc, isRTL && styles.rtl]}>
+                        {ar(
+                          'Controlled studies show no risk to the fetus in any trimester.',
+                          'دراسات موثوقة تُثبت عدم وجود خطر على الجنين في أي مرحلة.'
+                        )}
+                      </Text>
+                    </View>
                   </View>
 
-                  {/* B1 / B2 / B3 compact cards */}
-                  <View style={styles.catBGroup}>
-                    {(
-                      [
-                        {
-                          cat: 'B1',
-                          label: ar('Low Risk', 'خطر منخفض'),
-                          desc: ar('No evidence of harm in limited human studies.', 'لا دليل على الضرر في دراسات بشرية محدودة.'),
-                        },
-                        {
-                          cat: 'B2',
-                          label: ar('No Harm Seen', 'لا ضرر'),
-                          desc: ar('Animal studies show no harm; human data limited.', 'دراسات الحيوانات لا تُظهر ضرراً.'),
-                        },
-                        {
-                          cat: 'B3',
-                          label: ar('Uncertain', 'غير مؤكد'),
-                          desc: ar('Animal studies show harm, human data lacks.', 'دراسات الحيوانات تُظهر ضرراً محتملاً.'),
-                        },
-                      ] as Array<{ cat: string; label: string; desc: string }>
-                    ).map(({ cat, label, desc }) => (
-                      <View key={cat} style={styles.catCardB}>
-                        <Text style={styles.catCardBLetter}>{cat}</Text>
-                        <Text style={styles.catCardBLabel}>{label}</Text>
-                        <Text style={styles.catCardBDesc}>{desc}</Text>
+                  {/* B1 / B2 / B3 — three equal chips */}
+                  <View style={[styles.bRow, isRTL && styles.rowRev]}>
+                    {[
+                      { cat: 'B1', label: ar('Low Risk',    'خطر منخفض') },
+                      { cat: 'B2', label: ar('No Harm',     'لا ضرر')    },
+                      { cat: 'B3', label: ar('Uncertain',   'غير مؤكد')  },
+                    ].map(({ cat, label }) => (
+                      <View key={cat} style={styles.bChip}>
+                        <Text style={styles.bChipLetter}>{cat}</Text>
+                        <Text style={styles.bChipLabel}>{label}</Text>
                       </View>
                     ))}
                   </View>
-                </View>
 
-                {/* Row 2: C / D / X */}
-                <View style={[styles.catRow, isRTL && styles.rowRev]}>
-                  {(
-                    [
-                      {
-                        cat: 'C',
-                        color: '#825400',
-                        bg: '#ffffff',
-                        borderColor: '#825400',
-                        label: ar('Caution', 'تحذير'),
-                        desc: ar(
-                          'May have harmful effects. Use only if benefits outweigh risks.',
-                          'قد يكون ضاراً. استخدمي فقط إذا كانت الفوائد تفوق المخاطر.'
-                        ),
-                        labelColor: '#181c1c',
-                      },
-                      {
-                        cat: 'D',
-                        color: '#d35400',
-                        bg: '#ffffff',
-                        borderColor: '#d35400',
-                        label: ar('High Risk', 'خطر عالٍ'),
-                        desc: ar(
-                          'Evidence of fetal risk. Used only in life-threatening emergencies.',
-                          'دليل على خطر الجنين. يُستخدم فقط في حالات الطوارئ.'
-                        ),
-                        labelColor: '#181c1c',
-                      },
-                      {
-                        cat: 'X',
-                        color: '#ba1a1a',
-                        bg: '#ffdad6',
-                        borderColor: '#ba1a1a',
-                        label: ar('Prohibited', 'محظور'),
-                        desc: ar(
-                          'Clear fetal risk. Risks clearly outweigh any benefit.',
-                          'خطر جنيني واضح. المخاطر تفوق أي فائدة.'
-                        ),
-                        labelColor: '#ba1a1a',
-                      },
-                    ] as Array<{ cat: string; color: string; bg: string; borderColor: string; label: string; desc: string; labelColor: string }>
-                  ).map(({ cat, color, bg, borderColor, label, desc, labelColor }) => (
-                    <View
-                      key={cat}
-                      style={[styles.catCardCDX, { backgroundColor: bg, borderLeftColor: borderColor }]}
-                    >
-                      <View style={[styles.catCardATop, isRTL && styles.rowRev]}>
-                        <View style={[styles.catCircle, { backgroundColor: color }]}>
-                          <Text style={styles.catCircleLetter}>{cat}</Text>
-                        </View>
-                        <Text style={[styles.catCardALabel, { color: labelColor }]}>{label}</Text>
+                  {/* C, D, X — full-width rows */}
+                  {[
+                    { cat: 'C', color: '#825400', label: ar('Caution',    'تحذير'),      desc: ar('May cause reversible effects on the fetus.', 'قد يُسبب آثاراً قابلة للعكس على الجنين.') },
+                    { cat: 'D', color: '#d35400', label: ar('High Risk',  'خطر عالٍ'),   desc: ar('Evidence of fetal harm. Emergency use only.', 'دليل على تشوهات جنينية. للطوارئ فقط.') },
+                    { cat: 'X', color: '#ba1a1a', label: ar('Prohibited', 'محظور'),      desc: ar('Do not use in pregnancy. Risks outweigh benefits.', 'لا تستخدمي أثناء الحمل. المخاطر تفوق الفوائد.') },
+                  ].map(({ cat, color, label, desc }) => (
+                    <View key={cat} style={[styles.cdxCard, { borderLeftColor: color },
+                      cat === 'X' && { backgroundColor: '#fff5f5' }]}>
+                      <View style={[styles.catCircleSmall, { backgroundColor: color }]}>
+                        <Text style={styles.catLetterSm}>{cat}</Text>
                       </View>
-                      <Text style={[styles.catCardADesc, isRTL && styles.textRTL]}>{desc}</Text>
+                      <View style={styles.catInfo}>
+                        <Text style={[styles.catLabel, { color: cat === 'X' ? color : '#181c1c' },
+                          isRTL && styles.rtl]}>{label}</Text>
+                        <Text style={[styles.catDesc, isRTL && styles.rtl]}>{desc}</Text>
+                      </View>
                     </View>
                   ))}
                 </View>
+              </>
+            )}
+
+            {/* ── LOADING ─────────────────────────────────────────────────── */}
+            {isLoading && (
+              <View style={styles.loadingBox}>
+                <ActivityIndicator size="large" color="#006a61" />
+                <Text style={[styles.loadingText, isRTL && styles.rtl]}>
+                  {appState === 'analyzing' ? t.analyzingImage : t.loading}
+                </Text>
               </View>
-            </>
-          )}
+            )}
 
-          {/* ── LOADING ──────────────────────────────────────────────────── */}
-          {isLoading && (
-            <View style={styles.loadingBox}>
-              <ActivityIndicator size="large" color="#006a61" />
-              <Text style={[styles.loadingText, isRTL && styles.textRTL]}>
-                {appState === 'analyzing' ? t.analyzingImage : t.loading}
-              </Text>
-            </View>
-          )}
-
-          {/* ── RESULTS ──────────────────────────────────────────────────── */}
-          {isResults && (
-            <MedicationCard
-              medication={
-                ingredientResults.length > 0
-                  ? (getOverallCategory(ingredientResults)
-                      ? ingredientResults.find((r) => r.medication)?.medication ?? null
-                      : null)
-                  : result
-              }
-              recognizedName={recognizedName}
-              ingredientResults={ingredientResults.length > 0 ? ingredientResults : undefined}
-              onReset={handleReset}
-            />
-          )}
-
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      {/* ── Bottom Navigation ─────────────────────────────────────────────── */}
-      <View style={[styles.bottomNav, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-        {NAV_ITEMS.map((item, i) => {
-          const isActive = i === activeNavIndex;
-          const label = language === 'ar' ? item.labelAr : item.label;
-          return (
-            <TouchableOpacity
-              key={i}
-              style={[styles.navItem, isActive && styles.navItemActive]}
-              activeOpacity={0.7}
-              onPress={isActive && isResults ? handleReset : undefined}
-            >
-              <MaterialCommunityIcons
-                name={item.icon}
-                size={22}
-                color={isActive ? '#ffffff' : 'rgba(24,28,28,0.38)'}
+            {/* ── RESULTS ─────────────────────────────────────────────────── */}
+            {isResults && (
+              <MedicationCard
+                medication={
+                  ingredientResults.length > 0
+                    ? (getOverallCategory(ingredientResults)
+                        ? ingredientResults.find(r => r.medication)?.medication ?? null
+                        : null)
+                    : result
+                }
+                recognizedName={recognizedName}
+                ingredientResults={ingredientResults.length > 0 ? ingredientResults : undefined}
+                onReset={handleReset}
               />
-              <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>{label}</Text>
+            )}
+
+          </ScrollView>
+        </KeyboardAvoidingView>
+      )}
+
+      {/* ── Bottom Nav ──────────────────────────────────────────────────── */}
+      <View style={[styles.nav, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+        {NAV.map((item, i) => {
+          const active = i === activeNavIndex;
+          return (
+            <TouchableOpacity key={i} style={[styles.navItem, active && styles.navItemActive]}
+              activeOpacity={0.75} onPress={() => handleNavPress(i)}>
+              <MaterialCommunityIcons name={item.icon} size={22}
+                color={active ? '#ffffff' : 'rgba(24,28,28,0.38)'} />
+              <Text style={[styles.navLabel, active && styles.navLabelActive]}>
+                {item.label}
+              </Text>
             </TouchableOpacity>
           );
         })}
@@ -410,348 +390,129 @@ export default function HomeScreen() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#f6faf9',
-  },
-  flex: { flex: 1 },
-  rowRev: { flexDirection: 'row-reverse' },
-  textRTL: { textAlign: 'right', writingDirection: 'rtl' },
+  root:    { flex: 1, backgroundColor: '#f6faf9' },
+  flex:    { flex: 1 },
+  row:     { flexDirection: 'row', gap: 14 },
+  rowRev:  { flexDirection: 'row-reverse' },
+  rtl:     { textAlign: 'right', writingDirection: 'rtl' },
+  accent:  { color: '#006a61' },
 
-  // ── Header ──────────────────────────────────────────────────────────────
+  // Header
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingBottom: 16,
-    backgroundColor: 'rgba(246,250,249,0.92)',
-    // ambient shadow
-    shadowColor: '#181c1c',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-    zIndex: 10,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingBottom: 14,
+    backgroundColor: 'rgba(246,250,249,0.96)',
+    shadowColor: '#181c1c', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 6, elevation: 3, zIndex: 10,
   },
-  headerBrand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  appTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#006a61',
-    letterSpacing: -0.5,
-  },
-  langBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 9999,
-    backgroundColor: '#f0f4f3',
-  },
-  langBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#006a61',
-  },
+  brand:       { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandText:   { fontSize: 21, fontWeight: '800', color: '#006a61', letterSpacing: -0.4 },
+  langBtn:     { flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#ebefee', borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 7 },
+  langBtnText: { fontSize: 12, fontWeight: '700', color: '#006a61' },
 
-  // ── Scroll content ───────────────────────────────────────────────────────
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 32,
-    gap: 20,
-  },
+  // Scroll
+  scroll: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 28, gap: 16 },
 
-  // ── Hero section ─────────────────────────────────────────────────────────
-  heroSection: {
-    borderRadius: 40,
-    backgroundColor: '#ebefee',
-    minHeight: 300,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+  // Hero
+  hero: {
+    borderRadius: 32, backgroundColor: '#ebefee',
+    minHeight: 260, overflow: 'hidden',
+    alignItems: 'center', justifyContent: 'center',
   },
   heroBlobTR: {
-    position: 'absolute',
-    top: -60,
-    right: -50,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: '#adefe7',
-    opacity: 0.5,
+    position: 'absolute', top: -50, right: -40,
+    width: 200, height: 200, borderRadius: 100,
+    backgroundColor: '#adefe7', opacity: 0.55,
   },
   heroBlobBL: {
-    position: 'absolute',
-    bottom: -40,
-    left: -30,
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: '#006a61',
-    opacity: 0.08,
+    position: 'absolute', bottom: -35, left: -25,
+    width: 150, height: 150, borderRadius: 75,
+    backgroundColor: '#006a61', opacity: 0.07,
   },
-  heroInner: {
-    width: '100%',
-    paddingHorizontal: 28,
-    paddingVertical: 36,
-    gap: 24,
-    alignItems: 'center',
-  },
-  heroTagline: {
-    fontSize: 36,
-    fontWeight: '800',
-    color: '#181c1c',
-    letterSpacing: -0.8,
-    lineHeight: 44,
-    textAlign: 'center',
-  },
-  heroAccent: {
-    color: '#006a61',
-  },
+  heroInner:   { width: '100%', paddingHorizontal: 24, paddingVertical: 32, gap: 20, alignItems: 'center' },
+  heroTagline: { fontSize: 32, fontWeight: '800', color: '#181c1c', letterSpacing: -0.6, lineHeight: 40, textAlign: 'center' },
 
-  // ── Action cards ─────────────────────────────────────────────────────────
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
+  // Action cards
   actionCard: {
-    flex: 1,
-    backgroundColor: '#f0f4f3',
-    borderRadius: 32,
-    padding: 24,
-    height: 220,
-    justifyContent: 'space-between',
-    // ambient shadow
-    shadowColor: '#181c1c',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
+    flex: 1, backgroundColor: '#f0f4f3', borderRadius: 28,
+    padding: 18, gap: 12, minHeight: 190,
+    shadowColor: '#181c1c', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05, shadowRadius: 12, elevation: 2,
   },
-  actionCardTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  cameraIconBox: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,106,97,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  uploadIconBox: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    backgroundColor: 'rgba(173,239,231,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionCardBottom: {
-    gap: 6,
-  },
-  actionCardTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#181c1c',
-    letterSpacing: -0.3,
-  },
-  actionCardDesc: {
-    fontSize: 12,
-    color: '#3e4947',
-    lineHeight: 18,
-    fontWeight: '500',
-  },
+  actionTop:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  actionIconBox:{ width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  actionTitle:  { fontSize: 17, fontWeight: '800', color: '#181c1c', letterSpacing: -0.2 },
+  actionDesc:   { fontSize: 12, color: '#3e4947', lineHeight: 17 },
 
-  // ── Category guide ───────────────────────────────────────────────────────
-  catGuide: {
-    gap: 16,
-  },
-  catGuideRef: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#006a61',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  catGuideHeading: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#181c1c',
-    letterSpacing: -0.5,
-    marginTop: -4,
-  },
-  catGuideSubtitle: {
-    fontSize: 14,
-    color: '#3e4947',
-    lineHeight: 22,
-    fontWeight: '500',
-    marginTop: -4,
-  },
-  catRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  // Category A — full card (flex 1)
+  // Category guide
+  catSection: { gap: 12 },
+  catRef:     { fontSize: 10, fontWeight: '700', color: '#006a61', letterSpacing: 1.5, textTransform: 'uppercase' },
+  catHeading: { fontSize: 26, fontWeight: '800', color: '#181c1c', letterSpacing: -0.4, marginTop: -2 },
+  catSubtitle:{ fontSize: 13, color: '#3e4947', lineHeight: 20, marginTop: -2 },
+
+  // Category A card
   catCardA: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    gap: 12,
-    shadowColor: '#181c1c',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 2,
-  },
-  catCardATop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 16,
+    backgroundColor: '#ffffff', borderRadius: 22, padding: 18,
+    shadowColor: '#181c1c', shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06, shadowRadius: 10, elevation: 2,
   },
   catCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#181c1c',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
+    width: 52, height: 52, borderRadius: 26,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  catCircleLetter: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#ffffff',
+  catLetter:   { fontSize: 22, fontWeight: '900', color: '#ffffff' },
+  catInfo:     { flex: 1, gap: 3 },
+  catLabel:    { fontSize: 15, fontWeight: '700', color: '#181c1c' },
+  catDesc:     { fontSize: 12, color: '#3e4947', lineHeight: 18 },
+
+  // B chips row
+  bRow:   { flexDirection: 'row', gap: 10 },
+  bChip: {
+    flex: 1, backgroundColor: '#f0f4f3', borderRadius: 18,
+    padding: 12, gap: 3,
+    borderWidth: 1, borderColor: '#bdc9c6',
   },
-  catCardALabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#181c1c',
-    flexShrink: 1,
-  },
-  catCardADesc: {
-    fontSize: 13,
-    color: '#3e4947',
-    lineHeight: 20,
-  },
-  // B1/B2/B3 compact group (flex 2)
-  catBGroup: {
-    flex: 2,
-    flexDirection: 'column',
-    gap: 8,
-  },
-  catCardB: {
-    flex: 1,
-    backgroundColor: '#f0f4f3',
-    borderRadius: 20,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#bdc9c6',
-    gap: 2,
-  },
-  catCardBLetter: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#256862',
-  },
-  catCardBLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#3e4947',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  catCardBDesc: {
-    fontSize: 10,
-    color: '#6e7977',
-    lineHeight: 14,
-  },
-  // C / D / X cards
-  catCardCDX: {
-    flex: 1,
-    borderRadius: 24,
-    padding: 16,
-    gap: 10,
+  bChipLetter: { fontSize: 20, fontWeight: '900', color: '#256862' },
+  bChipLabel:  { fontSize: 10, fontWeight: '700', color: '#3e4947', textTransform: 'uppercase', letterSpacing: 0.2 },
+
+  // C / D / X full-width cards
+  cdxCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: '#ffffff', borderRadius: 22, padding: 16,
     borderLeftWidth: 4,
-    shadowColor: '#181c1c',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 2,
+    shadowColor: '#181c1c', shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
+  catCircleSmall: {
+    width: 44, height: 44, borderRadius: 22,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  catLetterSm: { fontSize: 18, fontWeight: '900', color: '#ffffff' },
 
-  // ── Loading ──────────────────────────────────────────────────────────────
-  loadingBox: {
-    paddingVertical: 100,
-    alignItems: 'center',
-    gap: 20,
-  },
-  loadingText: {
-    fontSize: 15,
-    color: '#006a61',
-    fontWeight: '600',
-  },
+  // Loading
+  loadingBox:  { paddingVertical: 100, alignItems: 'center', gap: 18 },
+  loadingText: { fontSize: 15, color: '#006a61', fontWeight: '600' },
 
-  // ── Bottom navigation ────────────────────────────────────────────────────
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(246,250,249,0.95)',
-    paddingTop: 10,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    shadowColor: '#181c1c',
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 24,
-    elevation: 10,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingHorizontal: 20,
+  // Bottom nav
+  nav: {
+    flexDirection: 'row', backgroundColor: 'rgba(246,250,249,0.97)',
+    paddingTop: 10, alignItems: 'center', justifyContent: 'space-around',
+    paddingHorizontal: 10, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    shadowColor: '#181c1c', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.06, shadowRadius: 16, elevation: 10,
   },
   navItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    gap: 3,
-    borderRadius: 9999,
+    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 6, paddingHorizontal: 10, gap: 3, borderRadius: 9999,
   },
   navItemActive: {
-    backgroundColor: '#006a61',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    flex: 0,
-    marginTop: -20,
-    shadowColor: '#006a61',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
+    backgroundColor: '#006a61', width: 58, height: 58, borderRadius: 29,
+    marginTop: -22, paddingHorizontal: 0,
+    shadowColor: '#006a61', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
   },
-  navLabel: {
-    fontSize: 9,
-    color: 'rgba(24,28,28,0.38)',
-    fontWeight: '600',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-  navLabelActive: {
-    color: '#ffffff',
-    fontSize: 8,
-  },
+  navLabel:      { fontSize: 9, color: 'rgba(24,28,28,0.4)', fontWeight: '600', letterSpacing: 0.6, textTransform: 'uppercase' },
+  navLabelActive:{ color: '#ffffff', fontSize: 8 },
 });
