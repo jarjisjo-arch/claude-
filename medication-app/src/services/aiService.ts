@@ -72,8 +72,6 @@ Output ONLY the ingredient lines, nothing else. If you cannot identify any medic
         maxOutputTokens: 500,
         temperature: 0,
       },
-      // Disable extended thinking to prevent stream idle timeouts
-      thinkingConfig: { thinkingBudget: 0 },
     }),
   });
 
