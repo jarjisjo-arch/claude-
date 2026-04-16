@@ -2,6 +2,10 @@ import React, { createContext, useContext, useState } from 'react';
 import { I18nManager } from 'react-native';
 import { Language, translations } from '../i18n/translations';
 
+// Reset any persisted RTL state — we control RTL via explicit isRTL styles.
+// This runs at module load time so a fresh APK install starts in LTR.
+I18nManager.forceRTL(false);
+
 interface LanguageContextType {
   language: Language;
   toggleLanguage: () => void;
@@ -22,9 +26,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const toggleLanguage = () => {
     const next: Language = language === 'en' ? 'ar' : 'en';
     setLanguage(next);
-    // Note: RTL layout changes fully take effect after app restart in native,
-    // but text alignment and direction are handled inline via isRTL flag.
-    I18nManager.forceRTL(next === 'ar');
+    // RTL is handled entirely via our isRTL flag in styles.
+    // forceRTL is intentionally not called here to avoid layout conflicts.
   };
 
   const isRTL = language === 'ar';
