@@ -6,7 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import google.generativeai as genai
+from google import genai
 from PIL import Image
 import io
 
@@ -22,8 +22,7 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 STORAGE_DIR = Path(os.getenv("STORAGE_DIR", "images"))
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 STORAGE_DIR.mkdir(exist_ok=True)
 
@@ -60,7 +59,10 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     image = Image.open(io.BytesIO(file_bytes))
 
     try:
-        response = model.generate_content([EXTRACT_PROMPT, image])
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=[EXTRACT_PROMPT, image],
+        )
         extracted = response.text.strip()
     except Exception as e:
         logger.error("Gemini error: %s", e)
