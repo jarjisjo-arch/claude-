@@ -79,14 +79,15 @@ jobs:
           python3 - <<'PYEOF'
           import json, urllib.request, os
 
-          try:
-              with open('/tmp/gradle-output.txt') as f:
-                  lines = f.readlines()
+          import pathlib
+          log = pathlib.Path('/tmp/gradle-output.txt')
+          if log.exists():
+              lines = log.read_text().splitlines(keepends=True)
               keywords = ['error:', 'FAILED', 'What went wrong', 'Execution failed', '^e: ']
               errors = [l for l in lines if any(k in l for k in keywords)]
               body = ''.join(errors[:80]) if errors else ''.join(lines[-60:])
-          except Exception as e:
-              body = f'Could not read build log: {e}'
+          else:
+              body = 'Build failed before Gradle ran (likely a missing secret or setup step). Check the Actions log for details.'
 
           comment = f"### Build #{os.environ['RUN_NUMBER']} failed\n```\n{body[:3000]}\n```"
           data = json.dumps({'body': comment}).encode()
