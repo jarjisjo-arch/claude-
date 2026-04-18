@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Platform,
   TouchableOpacity,
   ActivityIndicator,
+  BackHandler,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -57,6 +58,16 @@ export default function HomeScreen() {
   const [searchHistory, setSearchHistory] = useState<SearchRecord[]>([]);
 
   const ar = (en: string, arStr: string) => language === 'ar' ? arStr : en;
+
+  // ── Android back button ────────────────────────────────────────────────────
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (currentTab !== 'home') { setCurrentTab('home'); return true; }
+      if (appState === 'done') { handleReset(); return true; }
+      return false;
+    });
+    return () => sub.remove();
+  }, [currentTab, appState]);
 
   // ── Save to history ────────────────────────────────────────────────────────
   const saveHistory = (
@@ -145,8 +156,32 @@ export default function HomeScreen() {
   };
 
   const pickFromGallery = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert('', t.permissionDenied); return; }
+    const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
+    if (status === 'undetermined') {
+      Alert.alert(
+        ar('Photo Library Access', 'الوصول إلى مكتبة الصور'),
+        ar(
+          'Pregna AI needs access to your photo library to analyse medication images.',
+          'يحتاج Pregna AI إلى الوصول إلى مكتبة صورك لتحليل صور الأدوية.'
+        ),
+        [
+          { text: ar('Cancel', 'إلغاء'), style: 'cancel' },
+          {
+            text: ar('Allow', 'السماح'), onPress: async () => {
+              const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+              if (!perm.granted) { Alert.alert('', t.permissionDenied); return; }
+              launchGallery();
+            },
+          },
+        ]
+      );
+      return;
+    }
+    if (status !== 'granted') { Alert.alert('', t.permissionDenied); return; }
+    launchGallery();
+  };
+
+  const launchGallery = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'], quality: 0.8, allowsEditing: true, aspect: [4, 3], base64: true,
     });
