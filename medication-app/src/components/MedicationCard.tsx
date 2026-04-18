@@ -119,31 +119,28 @@ export default function MedicationCard({
 
       {/* Overall Safety Card */}
       <View style={[styles.safetyCard, { backgroundColor: badgeBg }]}>
-        <View style={[styles.safetyCardInner, isRTL && styles.safetyCardInnerRev]}>
-          {/* Large pulsing badge */}
-          <View style={styles.badgeWrap}>
-            <View style={[styles.badgePulse, { backgroundColor: badgeColor + '30' }]} />
-            <View style={[styles.badge, { backgroundColor: badgeColor }]}>
-              <Text style={styles.badgeLetter}>{cat}</Text>
-            </View>
-          </View>
+        <View style={styles.decorBlob} pointerEvents="none" />
 
-          {/* Info */}
-          <View style={styles.safetyInfo}>
-            <View style={[styles.safetyChip, { backgroundColor: badgeColor + '18' }]}>
-              <Text style={[styles.safetyChipText, { color: badgeColor }]}>
-                {ar('PREGNANCY CATEGORY', 'فئة الحمل')}
-              </Text>
-            </View>
-            <Text style={[styles.safetyTitle, isRTL && styles.textRTL]}>
-              {catDesc}
-            </Text>
-            <Text style={[styles.safetyBody, isRTL && styles.textRTL]}>{adecDef}</Text>
+        {/* Chip */}
+        <View style={[styles.safetyChip, { backgroundColor: badgeColor + '18' }, { alignSelf: 'center' }]}>
+          <Text style={[styles.safetyChipText, { color: badgeColor }]}>
+            {ar('PREGNANCY CATEGORY', 'فئة الحمل')}
+          </Text>
+        </View>
+
+        {/* Badge */}
+        <View style={styles.badgeWrap}>
+          <View style={[styles.badgePulse, { backgroundColor: badgeColor + '30' }]} />
+          <View style={[styles.badge, { backgroundColor: badgeColor }]}>
+            <Text style={styles.badgeLetter}>{cat}</Text>
           </View>
         </View>
 
-        {/* Decorative blur circle */}
-        <View style={styles.decorBlob} pointerEvents="none" />
+        {/* Title + ADEC definition */}
+        <Text style={[styles.safetyTitle, { color: badgeColor }, isRTL && styles.textRTL]}>
+          {catDesc}
+        </Text>
+        <Text style={[styles.safetyBody, isRTL && styles.textRTL]}>{adecDef}</Text>
       </View>
 
       {/* Critical Medical Note */}
@@ -221,31 +218,30 @@ function CombinationCard({ ingredientResults, onReset, isRTL, language, t, ar }:
 
       {/* Overall Safety Card */}
       <View style={[styles.safetyCard, { backgroundColor: badgeBg }]}>
-        <View style={[styles.safetyCardInner, isRTL && styles.safetyCardInnerRev]}>
-          {/* Large pulsing badge */}
-          <View style={styles.badgeWrap}>
-            <View style={[styles.badgePulse, { backgroundColor: badgeColor + '30' }]} />
-            <View style={[styles.badge, { backgroundColor: badgeColor }]}>
-              <Text style={styles.badgeLetter}>{overallCat ?? '?'}</Text>
-            </View>
-          </View>
+        <View style={styles.decorBlob} pointerEvents="none" />
 
-          {/* Info */}
-          <View style={styles.safetyInfo}>
-            <View style={[styles.safetyChip, { backgroundColor: badgeColor + '18' }]}>
-              <Text style={[styles.safetyChipText, { color: badgeColor }]}>
-                {ar('OVERALL SAFETY CATEGORY', 'فئة السلامة الإجمالية')}
-              </Text>
-            </View>
-            <Text style={[styles.safetyTitle, isRTL && styles.textRTL]}>
-              {overallCatDesc}
-            </Text>
-            {overallAdecDef ? (
-              <Text style={[styles.safetyBody, isRTL && styles.textRTL]}>{overallAdecDef}</Text>
-            ) : null}
+        {/* Chip */}
+        <View style={[styles.safetyChip, { backgroundColor: badgeColor + '18' }, { alignSelf: 'center' }]}>
+          <Text style={[styles.safetyChipText, { color: badgeColor }]}>
+            {ar('OVERALL SAFETY CATEGORY', 'فئة السلامة الإجمالية')}
+          </Text>
+        </View>
+
+        {/* Badge */}
+        <View style={styles.badgeWrap}>
+          <View style={[styles.badgePulse, { backgroundColor: badgeColor + '30' }]} />
+          <View style={[styles.badge, { backgroundColor: badgeColor }]}>
+            <Text style={styles.badgeLetter}>{overallCat ?? '?'}</Text>
           </View>
         </View>
-        <View style={styles.decorBlob} pointerEvents="none" />
+
+        {/* Title + ADEC definition */}
+        <Text style={[styles.safetyTitle, { color: badgeColor }, isRTL && styles.textRTL]}>
+          {overallCatDesc}
+        </Text>
+        {overallAdecDef ? (
+          <Text style={[styles.safetyBody, isRTL && styles.textRTL]}>{overallAdecDef}</Text>
+        ) : null}
       </View>
 
       {/* Active Ingredients */}
@@ -372,35 +368,28 @@ const styles = StyleSheet.create({
   // ── Overall safety card ────────────────────────────────────────────────
   safetyCard: {
     borderRadius: 32,
-    padding: 28,
+    paddingVertical: 28,
+    paddingHorizontal: 24,
     overflow: 'hidden',
+    alignItems: 'center',
+    gap: 14,
     shadowColor: '#181c1c',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.06,
     shadowRadius: 24,
     elevation: 4,
   },
-  safetyCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 24,
-  },
-  safetyCardInnerRev: {
-    flexDirection: 'row-reverse',
-  },
   badgeWrap: {
-    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 120,
-    height: 120,
-    flexShrink: 0,
+    width: 124,
+    height: 124,
   },
   badgePulse: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 124,
+    height: 124,
+    borderRadius: 62,
   },
   badge: {
     width: 104,
@@ -409,11 +398,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 6,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: 'rgba(255,255,255,0.35)',
     shadowColor: '#181c1c',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
     elevation: 8,
   },
   badgeLetter: {
@@ -422,13 +411,8 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: -1,
   },
-  safetyInfo: {
-    flex: 1,
-    gap: 8,
-  },
   safetyChip: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 5,
     borderRadius: 9999,
   },
@@ -439,24 +423,26 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   safetyTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '800',
     color: '#181c1c',
-    lineHeight: 24,
+    textAlign: 'center',
+    lineHeight: 22,
   },
   safetyBody: {
     fontSize: 13,
     color: '#3e4947',
     lineHeight: 20,
+    textAlign: 'center',
   },
   decorBlob: {
     position: 'absolute',
-    top: -60,
-    right: -60,
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    top: -50,
+    right: -50,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.09)',
   },
 
   // ── Ingredients ────────────────────────────────────────────────────────
