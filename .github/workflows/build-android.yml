@@ -46,12 +46,21 @@ jobs:
 
       - name: Decode keystore
         run: |
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "ERROR: KEYSTORE_BASE64 secret is not set. Please add it in GitHub repo Settings → Secrets → Actions."
+            exit 1
+          fi
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > medication-app/android/app/keystore.jks
+          if [ ! -s medication-app/android/app/keystore.jks ]; then
+            echo "ERROR: Decoded keystore file is empty. KEYSTORE_BASE64 may be corrupted."
+            exit 1
+          fi
+          echo "Keystore decoded successfully ($(wc -c < medication-app/android/app/keystore.jks) bytes)"
 
       - name: Build AAB
         working-directory: medication-app/android
         env:
-          KEYSTORE_PATH: keystore.jks
+          KEYSTORE_PATH: ${{ github.workspace }}/medication-app/android/app/keystore.jks
           KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
           KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
           KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}

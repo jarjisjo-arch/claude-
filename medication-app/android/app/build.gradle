@@ -102,7 +102,8 @@ android {
             keyPassword 'android'
         }
         release {
-            storeFile file(System.getenv("KEYSTORE_PATH") ?: 'debug.keystore')
+            def ksPath = System.getenv("KEYSTORE_PATH")
+            storeFile ksPath ? new File(ksPath) : file('debug.keystore')
             storePassword System.getenv("KEYSTORE_STORE_PASSWORD") ?: 'android'
             keyAlias System.getenv("KEYSTORE_KEY_ALIAS") ?: 'androiddebugkey'
             keyPassword System.getenv("KEYSTORE_KEY_PASSWORD") ?: 'android'
