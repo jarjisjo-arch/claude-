@@ -6,6 +6,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ADEC } from '../constants/adec';
 
 interface Props {
   language: string;
@@ -16,6 +17,16 @@ export default function GuideScreen({ language, isRTL }: Props) {
   const ar = (en: string, arStr: string) => language === 'ar' ? arStr : en;
   const rtl = isRTL && styles.rtl;
   const rowDir = isRTL ? styles.rowRev : styles.row;
+
+  const categories = [
+    { cat: 'A',  color: '#006a61', label: ar('Category A',  'الفئة أ')  },
+    { cat: 'B1', color: '#256862', label: ar('Category B1', 'الفئة ب١') },
+    { cat: 'B2', color: '#256862', label: ar('Category B2', 'الفئة ب٢') },
+    { cat: 'B3', color: '#256862', label: ar('Category B3', 'الفئة ب٣') },
+    { cat: 'C',  color: '#825400', label: ar('Category C',  'الفئة ج')  },
+    { cat: 'D',  color: '#d35400', label: ar('Category D',  'الفئة د')  },
+    { cat: 'X',  color: '#ba1a1a', label: ar('Category X',  'الفئة س')  },
+  ];
 
   return (
     <ScrollView
@@ -94,27 +105,21 @@ export default function GuideScreen({ language, isRTL }: Props) {
         </Text>
         <Text style={[styles.sectionSubtitle, rtl]}>
           {ar(
-            'Based on the Australian Drug Evaluation Committee (ADEC) classification system used worldwide.',
-            'بناءً على نظام التصنيف الأسترالي المعتمد دولياً للأدوية خلال الحمل.'
+            'Official definitions from the Australian Drug Evaluation Committee (ADEC) — a globally recognised classification system for prescribing medicines in pregnancy.',
+            'التعريفات الرسمية للجنة تقييم الأدوية الأسترالية (ADEC) — نظام تصنيف معتمد دولياً لوصف الأدوية خلال الحمل.'
           )}
         </Text>
 
-        {[
-          { cat: 'A',  color: '#006a61', label: ar('Safest — No proven risk', 'الأكثر أماناً'), desc: ar('Adequate and well-controlled studies have failed to demonstrate risk to the fetus.', 'الدراسات الموثوقة لم تُثبت أي خطر على الجنين.') },
-          { cat: 'B1', color: '#256862', label: ar('Likely Safe — Limited human data', 'آمن غالباً'), desc: ar('No evidence of increased occurrence of fetal damage in limited human data.', 'لا دليل على ضرر جنيني في البيانات البشرية المحدودة.') },
-          { cat: 'B2', color: '#256862', label: ar('Likely Safe — Animal data ok', 'آمن غالباً'), desc: ar('Animal studies show no evidence of harm; human data insufficient.', 'دراسات الحيوانات لا تُظهر ضرراً؛ البيانات البشرية غير كافية.') },
-          { cat: 'B3', color: '#256862', label: ar('Use with Caution', 'استخدمي بحذر'), desc: ar('Animal studies show some concern; significance in humans unknown.', 'دراسات الحيوانات تُظهر بعض المخاوف؛ الأهمية في البشر غير معروفة.') },
-          { cat: 'C',  color: '#825400', label: ar('Caution — May affect fetus', 'تحذير'), desc: ar('Has caused or may cause harmful pharmacological effects on fetus. No malformations.', 'قد يُسبب آثاراً دوائية ضارة على الجنين دون تشوهات.') },
-          { cat: 'D',  color: '#d35400', label: ar('High Risk — Fetal damage', 'خطر عالٍ'), desc: ar('Evidence of fetal malformation or irreversible damage. Emergency use only.', 'دليل على تشوهات جنينية. يُستخدم فقط في الطوارئ.') },
-          { cat: 'X',  color: '#ba1a1a', label: ar('Prohibited', 'محظور مطلقاً'), desc: ar('High risk of permanent damage. Do not use in pregnancy under any circumstances.', 'خطر عالٍ من الضرر الدائم. لا تستخدمي تحت أي ظرف.') },
-        ].map(({ cat, color, label, desc }) => (
+        {categories.map(({ cat, color, label }) => (
           <View key={cat} style={[styles.catRow, rowDir]}>
             <View style={[styles.catBadge, { backgroundColor: color }]}>
               <Text style={styles.catBadgeText}>{cat}</Text>
             </View>
             <View style={styles.catInfo}>
               <Text style={[styles.catLabel, { color }, rtl]}>{label}</Text>
-              <Text style={[styles.catDesc, rtl]}>{desc}</Text>
+              <Text style={[styles.catDesc, rtl]}>
+                {language === 'ar' ? ADEC[cat].ar : ADEC[cat].en}
+              </Text>
             </View>
           </View>
         ))}

@@ -269,70 +269,8 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Category Guide */}
-                <View style={styles.catSection}>
-                  <Text style={styles.catRef}>{ar('REFERENCE', 'مرجع')}</Text>
-                  <Text style={[styles.catHeading, isRTL && styles.rtl]}>
-                    {ar('Medication Categories', 'تصنيفات الأدوية')}
-                  </Text>
-                  <Text style={[styles.catSubtitle, isRTL && styles.rtl]}>
-                    {ar(
-                      'Safety ratings established by global health authorities during pregnancy.',
-                      'تصنيفات السلامة المعتمدة من السلطات الصحية العالمية خلال الحمل.'
-                    )}
-                  </Text>
-
-                  {/* Category A — featured full-width */}
-                  <View style={styles.catCardA}>
-                    <View style={[styles.catCircle, { backgroundColor: '#006a61' }]}>
-                      <Text style={styles.catLetter}>A</Text>
-                    </View>
-                    <View style={styles.catInfo}>
-                      <Text style={[styles.catLabel, isRTL && styles.rtl]}>
-                        {ar('Safe to use', 'آمن للاستخدام')}
-                      </Text>
-                      <Text style={[styles.catDesc, isRTL && styles.rtl]}>
-                        {ar(
-                          'Controlled studies show no risk to the fetus in any trimester.',
-                          'دراسات موثوقة تُثبت عدم وجود خطر على الجنين في أي مرحلة.'
-                        )}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* B1 / B2 / B3 — three equal chips */}
-                  <View style={[styles.bRow, isRTL && styles.rowRev]}>
-                    {[
-                      { cat: 'B1', label: ar('Low Risk',    'خطر منخفض') },
-                      { cat: 'B2', label: ar('No Harm',     'لا ضرر')    },
-                      { cat: 'B3', label: ar('Uncertain',   'غير مؤكد')  },
-                    ].map(({ cat, label }) => (
-                      <View key={cat} style={styles.bChip}>
-                        <Text style={styles.bChipLetter}>{cat}</Text>
-                        <Text style={styles.bChipLabel}>{label}</Text>
-                      </View>
-                    ))}
-                  </View>
-
-                  {/* C, D, X — full-width rows */}
-                  {[
-                    { cat: 'C', color: '#825400', label: ar('Caution',    'تحذير'),      desc: ar('May cause reversible effects on the fetus.', 'قد يُسبب آثاراً قابلة للعكس على الجنين.') },
-                    { cat: 'D', color: '#d35400', label: ar('High Risk',  'خطر عالٍ'),   desc: ar('Evidence of fetal harm. Emergency use only.', 'دليل على تشوهات جنينية. للطوارئ فقط.') },
-                    { cat: 'X', color: '#ba1a1a', label: ar('Prohibited', 'محظور'),      desc: ar('Do not use in pregnancy. Risks outweigh benefits.', 'لا تستخدمي أثناء الحمل. المخاطر تفوق الفوائد.') },
-                  ].map(({ cat, color, label, desc }) => (
-                    <View key={cat} style={[styles.cdxCard, { borderLeftColor: color },
-                      cat === 'X' && { backgroundColor: '#fff5f5' }]}>
-                      <View style={[styles.catCircleSmall, { backgroundColor: color }]}>
-                        <Text style={styles.catLetterSm}>{cat}</Text>
-                      </View>
-                      <View style={styles.catInfo}>
-                        <Text style={[styles.catLabel, { color: cat === 'X' ? color : '#181c1c' },
-                          isRTL && styles.rtl]}>{label}</Text>
-                        <Text style={[styles.catDesc, isRTL && styles.rtl]}>{desc}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
+                {/* Ad placement — reserved space for future banner ad */}
+                <View style={styles.adPlaceholder} />
               </>
             )}
 
@@ -445,51 +383,8 @@ const styles = StyleSheet.create({
   actionTitle:  { fontSize: 17, fontWeight: '800', color: '#181c1c', letterSpacing: -0.2 },
   actionDesc:   { fontSize: 12, color: '#3e4947', lineHeight: 17 },
 
-  // Category guide
-  catSection: { gap: 12 },
-  catRef:     { fontSize: 10, fontWeight: '700', color: '#006a61', letterSpacing: 1.5, textTransform: 'uppercase' },
-  catHeading: { fontSize: 26, fontWeight: '800', color: '#181c1c', letterSpacing: -0.4, marginTop: -2 },
-  catSubtitle:{ fontSize: 13, color: '#3e4947', lineHeight: 20, marginTop: -2 },
-
-  // Category A card
-  catCardA: {
-    flexDirection: 'row', alignItems: 'center', gap: 16,
-    backgroundColor: '#ffffff', borderRadius: 22, padding: 18,
-    shadowColor: '#181c1c', shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06, shadowRadius: 10, elevation: 2,
-  },
-  catCircle: {
-    width: 52, height: 52, borderRadius: 26,
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  },
-  catLetter:   { fontSize: 22, fontWeight: '900', color: '#ffffff' },
-  catInfo:     { flex: 1, gap: 3 },
-  catLabel:    { fontSize: 15, fontWeight: '700', color: '#181c1c' },
-  catDesc:     { fontSize: 12, color: '#3e4947', lineHeight: 18 },
-
-  // B chips row
-  bRow:   { flexDirection: 'row', gap: 10 },
-  bChip: {
-    flex: 1, backgroundColor: '#f0f4f3', borderRadius: 18,
-    padding: 12, gap: 3,
-    borderWidth: 1, borderColor: '#bdc9c6',
-  },
-  bChipLetter: { fontSize: 20, fontWeight: '900', color: '#256862' },
-  bChipLabel:  { fontSize: 10, fontWeight: '700', color: '#3e4947', textTransform: 'uppercase', letterSpacing: 0.2 },
-
-  // C / D / X full-width cards
-  cdxCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: '#ffffff', borderRadius: 22, padding: 16,
-    borderLeftWidth: 4,
-    shadowColor: '#181c1c', shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
-  },
-  catCircleSmall: {
-    width: 44, height: 44, borderRadius: 22,
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  },
-  catLetterSm: { fontSize: 18, fontWeight: '900', color: '#ffffff' },
+  // Ad placeholder
+  adPlaceholder: { height: 60, borderRadius: 12, backgroundColor: '#ebefee' },
 
   // Loading
   loadingBox:  { paddingVertical: 100, alignItems: 'center', gap: 18 },

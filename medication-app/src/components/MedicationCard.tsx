@@ -9,6 +9,7 @@ import {
   getOverallCategory,
 } from '../services/database';
 import { useLanguage } from '../context/LanguageContext';
+import { ADEC } from '../constants/adec';
 
 // ── Color helpers ──────────────────────────────────────────────────────────
 // Maps the design system's category colors exactly
@@ -99,6 +100,7 @@ export default function MedicationCard({
   const badgeColor  = catBadgeColor(cat);
   const badgeBg     = catBadgeBg(cat);
   const catDesc     = t.categories[cat as keyof typeof t.categories] ?? cat;
+  const adecDef     = ADEC[cat] ? (language === 'ar' ? ADEC[cat].ar : ADEC[cat].en) : '';
 
   return (
     <View style={styles.screen}>
@@ -136,7 +138,7 @@ export default function MedicationCard({
             <Text style={[styles.safetyTitle, isRTL && styles.textRTL]}>
               {catDesc}
             </Text>
-            <Text style={[styles.safetyBody, isRTL && styles.textRTL]}>{description}</Text>
+            <Text style={[styles.safetyBody, isRTL && styles.textRTL]}>{adecDef}</Text>
           </View>
         </View>
 
@@ -195,6 +197,9 @@ function CombinationCard({ ingredientResults, onReset, isRTL, language, t, ar }:
   const overallCatDesc = overallCat
     ? t.categories[overallCat as keyof typeof t.categories] ?? overallCat
     : ar('Not in database', 'غير موجود في قاعدة البيانات');
+  const overallAdecDef = overallCat && ADEC[overallCat]
+    ? (language === 'ar' ? ADEC[overallCat].ar : ADEC[overallCat].en)
+    : '';
 
   return (
     <View style={styles.screen}>
@@ -235,6 +240,9 @@ function CombinationCard({ ingredientResults, onReset, isRTL, language, t, ar }:
             <Text style={[styles.safetyTitle, isRTL && styles.textRTL]}>
               {overallCatDesc}
             </Text>
+            {overallAdecDef ? (
+              <Text style={[styles.safetyBody, isRTL && styles.textRTL]}>{overallAdecDef}</Text>
+            ) : null}
           </View>
         </View>
         <View style={styles.decorBlob} pointerEvents="none" />
