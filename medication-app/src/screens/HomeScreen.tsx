@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   BackHandler,
 } from 'react-native';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import SearchBar from '../components/SearchBar';
@@ -304,8 +305,14 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Ad placement — reserved space for future banner ad */}
-                <View style={styles.adPlaceholder} />
+                {/* Banner ad */}
+                <View style={styles.adContainer}>
+                  <BannerAd
+                    unitId={__DEV__ ? TestIds.BANNER : 'ca-app-pub-1024257026229576/6392253802'}
+                    size={BannerAdSize.BANNER}
+                    requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+                  />
+                </View>
               </>
             )}
 
@@ -419,7 +426,7 @@ const styles = StyleSheet.create({
   actionDesc:   { fontSize: 12, color: '#3e4947', lineHeight: 17 },
 
   // Ad placeholder
-  adPlaceholder: { height: 60, borderRadius: 12, backgroundColor: '#ebefee' },
+  adContainer: { alignItems: 'center', marginTop: 4 },
 
   // Loading
   loadingBox:  { paddingVertical: 100, alignItems: 'center', gap: 18 },
