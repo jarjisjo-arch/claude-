@@ -42,16 +42,13 @@
           "photosPermission": "This app accesses your photo library to identify medications.",
           "cameraPermission": "This app uses the camera to scan medication labels."
         }
-      ],
-      [
-        "react-native-google-mobile-ads",
-        {
-          "androidAppId": "ca-app-pub-1024257026229576~2209466219"
-        }
       ]
     ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-1024257026229576~2209466219"
   }
 }
