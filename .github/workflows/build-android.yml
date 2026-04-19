@@ -57,7 +57,7 @@ jobs:
           fi
           echo "Keystore decoded successfully ($(wc -c < medication-app/android/app/keystore.jks) bytes)"
 
-      - name: Build AAB
+      - name: Build AAB + APK
         working-directory: medication-app/android
         env:
           KEYSTORE_PATH: ${{ github.workspace }}/medication-app/android/app/keystore.jks
@@ -66,7 +66,7 @@ jobs:
           KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
         run: |
           set -o pipefail
-          ./gradlew bundleRelease 2>&1 | tee /tmp/gradle-output.txt
+          ./gradlew bundleRelease assembleRelease 2>&1 | tee /tmp/gradle-output.txt
           exit ${PIPESTATUS[0]}
 
       - name: Post error as PR comment
@@ -107,9 +107,16 @@ jobs:
               print(f'Failed to post comment: {e}')
           PYEOF
 
-      - name: Upload AAB
+      - name: Upload AAB (Play Store)
         uses: actions/upload-artifact@v4
         with:
-          name: pregna-ai
+          name: pregna-ai-aab
           path: medication-app/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - name: Upload APK (device testing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: pregna-ai-apk
+          path: medication-app/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
