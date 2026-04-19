@@ -107,6 +107,21 @@ jobs:
               print(f'Failed to post comment: {e}')
           PYEOF
 
+      - name: Export signing certificate
+        run: |
+          keytool -export -rfc \
+            -alias "${{ secrets.KEYSTORE_KEY_ALIAS }}" \
+            -file certificate.pem \
+            -keystore medication-app/android/app/keystore.jks \
+            -storepass "${{ secrets.KEYSTORE_STORE_PASSWORD }}"
+
+      - name: Upload signing certificate
+        uses: actions/upload-artifact@v4
+        with:
+          name: signing-certificate
+          path: certificate.pem
+          retention-days: 7
+
       - name: Upload AAB (Play Store)
         uses: actions/upload-artifact@v4
         with:
