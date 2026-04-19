@@ -93,6 +93,12 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
+        manifestPlaceholders = [
+            appJSONGoogleMobileAdsAppID: "ca-app-pub-1024257026229576~2209466219",
+            appJSONGoogleMobileAdsDelayAppMeasurementInit: "false",
+            appJSONGoogleMobileAdsOptimizeInitialization: "false",
+            appJSONGoogleMobileAdsOptimizeAdLoading: "false"
+        ]
     }
     signingConfigs {
         debug {
