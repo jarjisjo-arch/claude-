@@ -114,6 +114,12 @@ jobs:
             -file certificate.pem \
             -keystore medication-app/android/app/keystore.jks \
             -storepass "${{ secrets.KEYSTORE_STORE_PASSWORD }}"
+          echo "=== KEYSTORE CERTIFICATE FINGERPRINT (SHA-256) ==="
+          keytool -printcert -file certificate.pem | grep "SHA256:"
+          echo "=== APK SIGNING FINGERPRINT ==="
+          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --print-certs \
+            medication-app/android/app/build/outputs/apk/release/app-release.apk \
+            | grep "SHA-256"
 
       - name: Upload signing certificate
         uses: actions/upload-artifact@v4
