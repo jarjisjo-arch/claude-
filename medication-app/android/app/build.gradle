@@ -91,7 +91,7 @@ android {
         applicationId 'com.jarjisjo.medicationpregnancyapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10
+        versionCode 20
         versionName "1.0.0"
         manifestPlaceholders = [
             appJSONGoogleMobileAdsAppID: "ca-app-pub-1024257026229576~2209466219",
