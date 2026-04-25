@@ -157,28 +157,8 @@ export default function HomeScreen() {
   };
 
   const pickFromGallery = async () => {
-    const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
-    if (status === 'undetermined') {
-      Alert.alert(
-        ar('Photo Library Access', 'الوصول إلى مكتبة الصور'),
-        ar(
-          'Pregna AI needs access to your photo library to analyse medication images.',
-          'يحتاج Pregna AI إلى الوصول إلى مكتبة صورك لتحليل صور الأدوية.'
-        ),
-        [
-          { text: ar('Cancel', 'إلغاء'), style: 'cancel' },
-          {
-            text: ar('Allow', 'السماح'), onPress: async () => {
-              const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-              if (!perm.granted) { Alert.alert('', t.permissionDenied); return; }
-              launchGallery();
-            },
-          },
-        ]
-      );
-      return;
-    }
-    if (status !== 'granted') { Alert.alert('', t.permissionDenied); return; }
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { Alert.alert('', t.permissionDenied); return; }
     launchGallery();
   };
 
@@ -305,14 +285,6 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Banner ad */}
-                <View style={styles.adContainer}>
-                  <BannerAd
-                    unitId={__DEV__ ? TestIds.BANNER : 'ca-app-pub-1024257026229576/6392253802'}
-                    size={BannerAdSize.BANNER}
-                    requestOptions={{ requestNonPersonalizedAdsOnly: true }}
-                  />
-                </View>
               </>
             )}
 
@@ -345,6 +317,15 @@ export default function HomeScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       )}
+
+      {/* ── Ad Bar (all tabs) ───────────────────────────────────────────── */}
+      <View style={styles.adContainer}>
+        <BannerAd
+          unitId={__DEV__ ? TestIds.BANNER : 'ca-app-pub-1024257026229576/6392253802'}
+          size={BannerAdSize.LARGE_BANNER}
+          requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        />
+      </View>
 
       {/* ── Bottom Nav ──────────────────────────────────────────────────── */}
       <View style={[styles.nav, { paddingBottom: Math.max(insets.bottom, 10) }]}>
