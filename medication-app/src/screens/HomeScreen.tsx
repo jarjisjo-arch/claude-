@@ -7,6 +7,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  PermissionsAndroid,
   TouchableOpacity,
   ActivityIndicator,
   BackHandler,
@@ -157,8 +158,19 @@ export default function HomeScreen() {
   };
 
   const pickFromGallery = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { Alert.alert('', t.permissionDenied); return; }
+    if (Platform.OS === 'android') {
+      const permission = (parseInt(Platform.Version as string, 10) >= 33)
+        ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+        : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+      const result = await PermissionsAndroid.request(permission);
+      if (result !== PermissionsAndroid.RESULTS.GRANTED) {
+        Alert.alert('', t.permissionDenied);
+        return;
+      }
+    } else {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) { Alert.alert('', t.permissionDenied); return; }
+    }
     launchGallery();
   };
 
