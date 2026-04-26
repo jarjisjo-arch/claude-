@@ -322,7 +322,7 @@ export default function HomeScreen() {
       <View style={styles.adContainer}>
         <BannerAd
           unitId={__DEV__ ? TestIds.BANNER : 'ca-app-pub-1024257026229576/6392253802'}
-          size={BannerAdSize.LARGE_BANNER}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
           requestOptions={{ requestNonPersonalizedAdsOnly: true }}
         />
       </View>
