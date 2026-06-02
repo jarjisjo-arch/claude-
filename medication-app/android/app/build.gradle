@@ -91,7 +91,7 @@ android {
         applicationId 'com.jarjisjo.medicationpregnancyapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 24
+        versionCode 25
         versionName "1.0.0"
         manifestPlaceholders = [
             appJSONGoogleMobileAdsAppID: "ca-app-pub-1024257026229576~2209466219",
@@ -160,6 +160,7 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NativeModules, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LanguageProvider } from './src/context/LanguageContext';
 import HomeScreen from './src/screens/HomeScreen';
@@ -17,6 +18,12 @@ export default function App() {
       setDisclaimerAccepted(val === 'true');
       setDisclaimerChecked(true);
     });
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'android' && NativeModules.InAppUpdate) {
+      NativeModules.InAppUpdate.checkAndUpdate().catch(() => {});
+    }
   }, []);
 
   const handleAccept = async () => {
