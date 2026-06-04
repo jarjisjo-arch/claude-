@@ -107,6 +107,45 @@ jobs:
               print(f'Failed to post comment: {e}')
           PYEOF
 
+      - name: Check 16 KB page size alignment
+        run: |
+          python3 - <<'PYEOF'
+          import zipfile, struct, os
+
+          aab_path = "medication-app/android/app/build/outputs/bundle/release/app-release.aab"
+          failed = []
+
+          with zipfile.ZipFile(aab_path) as aab:
+              for entry in aab.namelist():
+                  if not entry.endswith('.so'):
+                      continue
+                  data = aab.read(entry)
+                  if len(data) < 64 or data[:4] != b'\x7fELF':
+                      continue
+                  ei_class = data[4]
+                  if ei_class == 1:
+                      e_phoff = struct.unpack_from('<I', data, 28)[0]
+                      e_phentsize = struct.unpack_from('<H', data, 42)[0]
+                      e_phnum = struct.unpack_from('<H', data, 44)[0]
+                  else:
+                      e_phoff = struct.unpack_from('<Q', data, 32)[0]
+                      e_phentsize = struct.unpack_from('<H', data, 54)[0]
+                      e_phnum = struct.unpack_from('<H', data, 56)[0]
+                  for i in range(e_phnum):
+                      off = e_phoff + i * e_phentsize
+                      p_type = struct.unpack_from('<I', data, off)[0]
+                      p_align = struct.unpack_from('<Q', data, off + 48)[0] if ei_class == 2 else struct.unpack_from('<I', data, off + 28)[0]
+                      if p_type == 1 and p_align < 16384:
+                          failed.append(f"{entry} (align={p_align})")
+                          break
+
+          if failed:
+              print("FAILING 16 KB CHECK:")
+              for f in failed: print(" ", f)
+          else:
+              print("All .so files pass 16 KB alignment check")
+          PYEOF
+
       - name: Export signing certificate
         run: |
           keytool -export -rfc \
