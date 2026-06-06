@@ -1,4 +1,5 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY ?? '';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
 
 type ImageMimeType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
 
@@ -6,23 +7,64 @@ export async function recognizeMedicationFromImage(
   base64Image: string,
   mimeType: ImageMimeType = 'image/jpeg'
 ): Promise<string[][]> {
-  if (!API_URL) {
-    throw new Error('EXPO_PUBLIC_API_URL is not set in .env');
+  if (!GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not set. Please add EXPO_PUBLIC_GEMINI_API_KEY to your .env file.');
   }
 
-  const response = await fetch(`${API_URL}/analyze`, {
+  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: base64Image, mimeType }),
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            {
+              inline_data: { mime_type: mimeType, data: base64Image },
+            },
+            {
+              text: `You are a pharmacist. Look at this medication image and list ALL active ingredients.
+
+IMPORTANT: Many medications contain 2, 3, or 4 active ingredients. You MUST list every single one — do not stop after the first ingredient.
+
+For each active ingredient, write one line with all its names separated by commas (generic name first).
+
+Format — one ingredient per line:
+genericName, brandName, alternativeSpelling
+
+Examples:
+
+Single ingredient:
+ibuprofen, advil, brufen, nurofen
+
+Two ingredients:
+amoxicillin, amoxil, trimox
+clavulanic acid, clavulanate
+
+Three ingredients:
+trimethoprim
+sulfamethoxazole, sulphamethoxazole
+codeine, methylmorphine
+
+Output ONLY the ingredient lines, nothing else. If you cannot identify any medication, output exactly: UNKNOWN`,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        maxOutputTokens: 500,
+        temperature: 0,
+        thinkingConfig: { thinkingBudget: 0 },
+      },
+    }),
   });
 
   if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`API error ${response.status}: ${err}`);
+    const errorBody = await response.text();
+    throw new Error(`Gemini API error ${response.status}: ${errorBody}`);
   }
 
   const data = await response.json();
-  const raw: string = (data as any)?.result?.trim() ?? 'UNKNOWN';
+  const raw: string = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? 'UNKNOWN';
 
   if (raw === 'UNKNOWN' || raw === '') return [['UNKNOWN']];
 
