@@ -482,6 +482,7 @@ const styles = StyleSheet.create({
 
   // Autocomplete
   suggestionsBox: {
+    alignSelf: 'stretch',
     backgroundColor: '#ffffff',
     borderRadius: 20,
     shadowColor: '#181c1c',
