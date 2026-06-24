@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ADEC } from '../constants/adec';
@@ -11,9 +12,10 @@ import { ADEC } from '../constants/adec';
 interface Props {
   language: string;
   isRTL: boolean;
+  onFeedback: () => void;
 }
 
-export default function GuideScreen({ language, isRTL }: Props) {
+export default function GuideScreen({ language, isRTL, onFeedback }: Props) {
   const ar = (en: string, arStr: string) => language === 'ar' ? arStr : en;
   const rtl = isRTL && styles.rtl;
   const rowDir = isRTL ? styles.rowRev : styles.row;
@@ -171,6 +173,20 @@ export default function GuideScreen({ language, isRTL }: Props) {
         </Text>
       </View>
 
+      {/* ── Feedback ─────────────────────────────────────────────────────── */}
+      <TouchableOpacity style={styles.feedbackBtn} onPress={onFeedback} activeOpacity={0.85}>
+        <MaterialCommunityIcons name="message-draw" size={22} color="#006a61" />
+        <View style={styles.feedbackText}>
+          <Text style={styles.feedbackTitle}>
+            {ar('Share your feedback', 'شاركنا رأيك')}
+          </Text>
+          <Text style={styles.feedbackDesc}>
+            {ar('Help us improve Pregna AI', 'ساعدنا في تحسين امن AI')}
+          </Text>
+        </View>
+        <MaterialCommunityIcons name={isRTL ? 'chevron-left' : 'chevron-right'} size={20} color="#006a61" />
+      </TouchableOpacity>
+
     </ScrollView>
   );
 }
@@ -234,4 +250,16 @@ const styles = StyleSheet.create({
   },
   aboutTitle: { fontSize: 22, fontWeight: '900', color: '#ffffff', letterSpacing: -0.4 },
   aboutDesc:  { fontSize: 13, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 20 },
+
+  // Feedback
+  feedbackBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: '#ffffff', borderRadius: 24, padding: 18,
+    borderWidth: 1.5, borderColor: 'rgba(0,106,97,0.2)',
+    shadowColor: '#006a61', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08, shadowRadius: 12, elevation: 3,
+  },
+  feedbackText:  { flex: 1 },
+  feedbackTitle: { fontSize: 15, fontWeight: '700', color: '#006a61' },
+  feedbackDesc:  { fontSize: 12, color: '#3e4947', marginTop: 2 },
 });

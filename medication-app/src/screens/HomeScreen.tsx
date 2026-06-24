@@ -19,6 +19,7 @@ import SearchBar from '../components/SearchBar';
 import MedicationCard from '../components/MedicationCard';
 import HistoryScreen from './HistoryScreen';
 import GuideScreen from './GuideScreen';
+import FeedbackScreen from './FeedbackScreen';
 import { useLanguage } from '../context/LanguageContext';
 import {
   searchMedication,
@@ -32,7 +33,7 @@ import { recognizeMedicationFromImage } from '../services/aiService';
 import * as ImagePicker from 'expo-image-picker';
 
 type AppState = 'idle' | 'searching' | 'analyzing' | 'done';
-type Tab = 'home' | 'history' | 'guide';
+type Tab = 'home' | 'history' | 'guide' | 'feedback';
 
 export interface SearchRecord {
   id: string;
@@ -271,8 +272,10 @@ export default function HomeScreen() {
       {/* ── Content ─────────────────────────────────────────────────────── */}
       {currentTab === 'history' ? (
         <HistoryScreen history={searchHistory} language={language} isRTL={isRTL} t={t} onDelete={handleDeleteHistory} />
+      ) : currentTab === 'feedback' ? (
+        <FeedbackScreen language={language} isRTL={isRTL} onBack={() => setCurrentTab('guide')} />
       ) : currentTab === 'guide' ? (
-        <GuideScreen language={language} isRTL={isRTL} />
+        <GuideScreen language={language} isRTL={isRTL} onFeedback={() => setCurrentTab('feedback')} />
       ) : (
         <KeyboardAvoidingView style={styles.flex}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
