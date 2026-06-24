@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   TextInput,
@@ -13,14 +13,15 @@ import { useLanguage } from '../context/LanguageContext';
 interface SearchBarProps {
   onSearch: (query: string) => void;
   loading: boolean;
+  value: string;
+  onChangeText: (text: string) => void;
 }
 
-export default function SearchBar({ onSearch, loading }: SearchBarProps) {
+export default function SearchBar({ onSearch, loading, value, onChangeText }: SearchBarProps) {
   const { t, isRTL } = useLanguage();
-  const [query, setQuery] = useState('');
 
   const handleSearch = () => {
-    if (query.trim()) onSearch(query.trim());
+    if (value.trim()) onSearch(value.trim());
   };
 
   return (
@@ -32,8 +33,8 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
         style={[styles.input, isRTL && styles.inputRTL]}
         placeholder={t.searchPlaceholder}
         placeholderTextColor="#bdc9c6"
-        value={query}
-        onChangeText={setQuery}
+        value={value}
+        onChangeText={onChangeText}
         onSubmitEditing={handleSearch}
         returnKeyType="search"
         textAlign={isRTL ? 'right' : 'left'}
@@ -41,6 +42,11 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
         autoCorrect={false}
         autoCapitalize="none"
       />
+      {value.length > 0 && (
+        <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <MaterialCommunityIcons name="close-circle" size={18} color="#bdc9c6" />
+        </TouchableOpacity>
+      )}
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}
         onPress={handleSearch}
@@ -73,13 +79,8 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 4,
   },
-  containerRTL: {
-    flexDirection: 'row-reverse',
-  },
-  iconWrap: {
-    paddingLeft: 14,
-    paddingRight: 2,
-  },
+  containerRTL: { flexDirection: 'row-reverse' },
+  iconWrap:    { paddingLeft: 14, paddingRight: 2 },
   input: {
     flex: 1,
     fontSize: 16,
@@ -87,18 +88,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     paddingVertical: 12,
   },
-  inputRTL: {
-    textAlign: 'right',
-  },
+  inputRTL:    { textAlign: 'right' },
+  clearBtn:    { paddingHorizontal: 4 },
   button: {
     backgroundColor: '#006a61',
     borderRadius: 9999,
     paddingHorizontal: 28,
     paddingVertical: 14,
   },
-  buttonDisabled: {
-    backgroundColor: '#77d7ca',
-  },
+  buttonDisabled: { backgroundColor: '#77d7ca' },
   buttonText: {
     color: '#ffffff',
     fontSize: 15,

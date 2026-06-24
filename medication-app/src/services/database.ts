@@ -1,4 +1,5 @@
 import medicationsData from '../data/medications.json';
+import Fuse from 'fuse.js';
 
 export interface Medication {
   id: number;
@@ -13,6 +14,21 @@ export interface Medication {
 }
 
 const medications: Medication[] = medicationsData.medications as Medication[];
+
+const fuse = new Fuse(medications, {
+  keys: ['nameEn', 'nameAr', 'searchTerms'],
+  threshold: 0.4,
+  distance: 100,
+  minMatchCharLength: 2,
+});
+
+export function getSuggestions(query: string, language = 'en', limit = 6): string[] {
+  if (!query || query.trim().length < 2) return [];
+  return fuse
+    .search(query.trim(), { limit })
+    .map(r => (language === 'ar' ? r.item.nameAr : r.item.nameEn))
+    .filter(Boolean);
+}
 
 /**
  * Search for a medication by name.

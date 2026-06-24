@@ -14,6 +14,7 @@ interface Props {
   language: string;
   isRTL: boolean;
   t: any;
+  onDelete: (id: string) => void;
 }
 
 function catColor(cat: string | null): string {
@@ -36,7 +37,7 @@ function timeAgo(date: Date, language: string): string {
   return language === 'ar' ? `منذ ${h} ساعة` : `${h}h ago`;
 }
 
-export default function HistoryScreen({ history, language, isRTL, t }: Props) {
+export default function HistoryScreen({ history, language, isRTL, t, onDelete }: Props) {
   const ar = (en: string, arStr: string) => language === 'ar' ? arStr : en;
 
   return (
@@ -110,12 +111,14 @@ export default function HistoryScreen({ history, language, isRTL, t }: Props) {
                   </View>
                 </View>
 
-                {/* Arrow */}
-                <MaterialCommunityIcons
-                  name={isRTL ? 'chevron-left' : 'chevron-right'}
-                  size={20}
-                  color="#bdc9c6"
-                />
+                {/* Delete */}
+                <TouchableOpacity
+                  onPress={() => onDelete(record.id)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  activeOpacity={0.6}
+                >
+                  <MaterialCommunityIcons name="trash-can-outline" size={20} color="#bdc9c6" />
+                </TouchableOpacity>
               </View>
             );
           })}
@@ -124,7 +127,7 @@ export default function HistoryScreen({ history, language, isRTL, t }: Props) {
 
       {history.length > 0 && (
         <Text style={styles.historyNote}>
-          {ar('Showing last 50 searches · Session only', 'آخر 50 بحث · جلسة مؤقتة')}
+          {ar(`${history.length} saved searches · tap 🗑 to delete`, `${history.length} بحث محفوظ · اضغط 🗑 للحذف`)}
         </Text>
       )}
     </ScrollView>

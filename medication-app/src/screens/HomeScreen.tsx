@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   BackHandler,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ import GuideScreen from './GuideScreen';
 import { useLanguage } from '../context/LanguageContext';
 import {
   searchMedication,
+  getSuggestions,
   Medication,
   IngredientResult,
   CATEGORY_RANK,
@@ -55,8 +57,13 @@ export default function HomeScreen() {
   const [recognizedName, setRecognizedName] = useState('');
   const [ingredientResults, setIngredientResults] = useState<IngredientResult[]>([]);
 
+  // Autocomplete
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+
   // History
   const [searchHistory, setSearchHistory] = useState<SearchRecord[]>([]);
+  const historyLoaded = useRef(false);
 
   const ar = (en: string, arStr: string) => language === 'ar' ? arStr : en;
 
@@ -69,6 +76,29 @@ export default function HomeScreen() {
     });
     return () => sub.remove();
   }, [currentTab, appState]);
+
+  // ── Load history from storage on mount ────────────────────────────────────
+  useEffect(() => {
+    AsyncStorage.getItem('search_history_v1').then(raw => {
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          const rehydrated: SearchRecord[] = parsed.map((r: any) => ({
+            ...r,
+            timestamp: new Date(r.timestamp),
+          }));
+          setSearchHistory(rehydrated);
+        } catch {}
+      }
+      historyLoaded.current = true;
+    });
+  }, []);
+
+  // ── Autocomplete suggestions ───────────────────────────────────────────────
+  useEffect(() => {
+    if (searchQuery.length < 2) { setSuggestions([]); return; }
+    setSuggestions(getSuggestions(searchQuery, language));
+  }, [searchQuery, language]);
 
   // ── Save to history ────────────────────────────────────────────────────────
   const saveHistory = (
@@ -87,11 +117,25 @@ export default function HomeScreen() {
       searchType: type,
       overallCategory: overall,
     };
-    setSearchHistory(prev => [record, ...prev].slice(0, 50));
+    setSearchHistory(prev => {
+      const updated = [record, ...prev].slice(0, 50);
+      AsyncStorage.setItem('search_history_v1', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleDeleteHistory = (id: string) => {
+    setSearchHistory(prev => {
+      const updated = prev.filter(r => r.id !== id);
+      AsyncStorage.setItem('search_history_v1', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSearch = (query: string) => {
+    setSuggestions([]);
+    setSearchQuery('');
     setAppState('searching');
     const found = searchMedication(query);
     setResult(found);
@@ -173,6 +217,8 @@ export default function HomeScreen() {
     setRecognizedName('');
     setIngredientResults([]);
     setAppState('idle');
+    setSearchQuery('');
+    setSuggestions([]);
   };
 
   // ── Derived state ──────────────────────────────────────────────────────────
@@ -224,7 +270,7 @@ export default function HomeScreen() {
 
       {/* ── Content ─────────────────────────────────────────────────────── */}
       {currentTab === 'history' ? (
-        <HistoryScreen history={searchHistory} language={language} isRTL={isRTL} t={t} />
+        <HistoryScreen history={searchHistory} language={language} isRTL={isRTL} t={t} onDelete={handleDeleteHistory} />
       ) : currentTab === 'guide' ? (
         <GuideScreen language={language} isRTL={isRTL} />
       ) : (
@@ -250,9 +296,31 @@ export default function HomeScreen() {
                         <>{'Safety for you\nand your '}<Text style={styles.accent}>little one</Text>{'.'}</>
                       )}
                     </Text>
-                    <SearchBar onSearch={handleSearch} loading={appState === 'searching'} />
+                    <SearchBar
+                      onSearch={handleSearch}
+                      loading={appState === 'searching'}
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                    />
                   </View>
                 </View>
+
+                {/* Autocomplete suggestions */}
+                {suggestions.length > 0 && (
+                  <View style={styles.suggestionsBox}>
+                    {suggestions.map((s, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={[styles.suggestionItem, i < suggestions.length - 1 && styles.suggestionBorder]}
+                        onPress={() => handleSearch(s)}
+                        activeOpacity={0.7}
+                      >
+                        <MaterialCommunityIcons name="pill" size={15} color="#006a61" />
+                        <Text style={[styles.suggestionText, isRTL && styles.rtl]} numberOfLines={1}>{s}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
 
                 {/* Action cards */}
                 <View style={[styles.row, isRTL && styles.rowRev]}>
@@ -403,6 +471,35 @@ const styles = StyleSheet.create({
   actionIconBox:{ width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   actionTitle:  { fontSize: 17, fontWeight: '800', color: '#181c1c', letterSpacing: -0.2 },
   actionDesc:   { fontSize: 12, color: '#3e4947', lineHeight: 17 },
+
+  // Autocomplete
+  suggestionsBox: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    shadowColor: '#181c1c',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 6,
+    overflow: 'hidden',
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  suggestionBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f4f3',
+  },
+  suggestionText: {
+    fontSize: 15,
+    color: '#181c1c',
+    fontWeight: '500',
+    flex: 1,
+  },
 
   // Ad placeholder
   adContainer: { alignItems: 'center', marginTop: 4 },
