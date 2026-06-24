@@ -289,8 +289,10 @@ export default function HomeScreen() {
               <>
                 {/* Hero */}
                 <View style={styles.hero}>
-                  <View style={styles.heroBlobTR} pointerEvents="none" />
-                  <View style={styles.heroBlobBL} pointerEvents="none" />
+                  <View style={styles.heroBlobContainer} pointerEvents="none">
+                    <View style={styles.heroBlobTR} />
+                    <View style={styles.heroBlobBL} />
+                  </View>
                   <View style={styles.heroInner}>
                     <Text style={[styles.heroTagline, isRTL && styles.rtl]}>
                       {language === 'ar' ? (
@@ -305,25 +307,24 @@ export default function HomeScreen() {
                       value={searchQuery}
                       onChangeText={setSearchQuery}
                     />
+                    {/* Suggestions — inside hero so they stay above the keyboard */}
+                    {suggestions.length > 0 && (
+                      <View style={styles.suggestionsBox}>
+                        {suggestions.map((s, i) => (
+                          <TouchableOpacity
+                            key={i}
+                            style={[styles.suggestionItem, i < suggestions.length - 1 && styles.suggestionBorder]}
+                            onPress={() => handleSearch(s)}
+                            activeOpacity={0.7}
+                          >
+                            <MaterialCommunityIcons name="pill" size={15} color="#006a61" />
+                            <Text style={[styles.suggestionText, isRTL && styles.rtl]} numberOfLines={1}>{s}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
                   </View>
                 </View>
-
-                {/* Autocomplete suggestions */}
-                {suggestions.length > 0 && (
-                  <View style={styles.suggestionsBox}>
-                    {suggestions.map((s, i) => (
-                      <TouchableOpacity
-                        key={i}
-                        style={[styles.suggestionItem, i < suggestions.length - 1 && styles.suggestionBorder]}
-                        onPress={() => handleSearch(s)}
-                        activeOpacity={0.7}
-                      >
-                        <MaterialCommunityIcons name="pill" size={15} color="#006a61" />
-                        <Text style={[styles.suggestionText, isRTL && styles.rtl]} numberOfLines={1}>{s}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
 
                 {/* Action cards */}
                 <View style={[styles.row, isRTL && styles.rowRev]}>
@@ -447,8 +448,12 @@ const styles = StyleSheet.create({
   // Hero
   hero: {
     borderRadius: 32, backgroundColor: '#ebefee',
-    minHeight: 260, overflow: 'hidden',
+    minHeight: 260,
     alignItems: 'center', justifyContent: 'center',
+  },
+  heroBlobContainer: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    borderRadius: 32, overflow: 'hidden',
   },
   heroBlobTR: {
     position: 'absolute', top: -50, right: -40,
