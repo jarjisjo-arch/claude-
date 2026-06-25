@@ -91,7 +91,7 @@ android {
         applicationId 'com.jarjisjo.medicationpregnancyapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 34
+        versionCode 35
         versionName "1.0.0"
         manifestPlaceholders = [
             appJSONGoogleMobileAdsAppID: "ca-app-pub-1024257026229576~2209466219",
@@ -134,6 +134,32 @@ android {
     }
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+}
+
+// Strip READ_MEDIA_IMAGES and READ_MEDIA_VIDEO from the merged manifest
+// (expo-image-picker injects these via its aar; Google Play rejects them for one-time access apps)
+android.applicationVariants.configureEach { variant ->
+    def variantName = variant.name.capitalize()
+    tasks.matching { it.name == "process${variantName}MainManifest" }.configureEach {
+        doLast {
+            def merged = new File(buildDir, "intermediates/merged_manifests/${variant.name}/process${variantName}MainManifest/AndroidManifest.xml")
+            if (!merged.exists()) {
+                merged = new File(buildDir, "intermediates/merged_manifest/${variant.name}/AndroidManifest.xml")
+            }
+            if (merged.exists()) {
+                def text = merged.text
+                def perms = [
+                    'android.permission.READ_MEDIA_IMAGES',
+                    'android.permission.READ_MEDIA_VIDEO',
+                ]
+                perms.each { perm ->
+                    text = text.replaceAll(/\s*<uses-permission[^>]*android:name="${perm}"[^>]*\/>/, '')
+                    text = text.replaceAll(/\s*<uses-permission[^>]*android:name="${perm}"[^>]*><\/uses-permission>/, '')
+                }
+                merged.text = text
+            }
+        }
     }
 }
 
