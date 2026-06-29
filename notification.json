@@ -1,0 +1,10 @@
+{
+  "show": false,
+  "id": "welcome-8",
+  "type": "warning",
+  "title": "Welcome to Pregna AI",
+  "message": "we have some truble for now.",
+  "titleAr": "مرحباً بكِ في امن AI",
+  "messageAr": "ابحثي عن أي دواء لمعرفة تصنيف سلامته أثناء الحمل.",
+  "link": ""
+}

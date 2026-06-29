@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Pregna AI",
+    "slug": "medication-pregnancy-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0f766e"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jarjisjo.medicationpregnancyapp",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to scan medication labels.",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photo library to identify medications."
+      }
+    },
+    "android": {
+      "package": "com.jarjisjo.medicationpregnancyapp",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "This app uses the camera to scan medication labels."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "This app accesses your photo library to identify medications.",
+          "cameraPermission": "This app uses the camera to scan medication labels."
+        }
+      ]
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-1024257026229576~2209466219"
+  }
+}
