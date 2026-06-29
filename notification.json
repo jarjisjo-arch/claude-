@@ -1,0 +1,10 @@
+{
+  "show": false,
+  "id": "welcome-1",
+  "type": "info",
+  "title": "Welcome to Pregna AI",
+  "message": "Search any medication to check its pregnancy safety category.",
+  "titleAr": "مرحباً بكِ في امن AI",
+  "messageAr": "ابحثي عن أي دواء لمعرفة تصنيف سلامته أثناء الحمل.",
+  "link": ""
+}

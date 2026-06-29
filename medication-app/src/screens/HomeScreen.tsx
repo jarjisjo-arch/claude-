@@ -20,6 +20,7 @@ import MedicationCard from '../components/MedicationCard';
 import HistoryScreen from './HistoryScreen';
 import GuideScreen from './GuideScreen';
 import FeedbackScreen from './FeedbackScreen';
+import AnnouncementBanner from '../components/AnnouncementBanner';
 import { useLanguage } from '../context/LanguageContext';
 import {
   searchMedication,
@@ -287,6 +288,9 @@ export default function HomeScreen() {
             {/* ── IDLE HOME ─────────────────────────────────────────────── */}
             {!isResults && !isLoading && (
               <>
+                {/* Remote announcement banner (edit notification.json to change) */}
+                <AnnouncementBanner language={language} isRTL={isRTL} />
+
                 {/* Hero */}
                 <View style={styles.hero}>
                   <View style={styles.heroBlobContainer} pointerEvents="none">
