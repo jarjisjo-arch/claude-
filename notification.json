@@ -1,6 +1,6 @@
 {
-  "show": true,
-  "id": "welcome-6",
+  "show": false,
+  "id": "welcome-7",
   "type": "warning",
   "title": "Welcome to Pregna AI",
   "message": "we have some truble for now.",
