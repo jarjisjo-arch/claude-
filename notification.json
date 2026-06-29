@@ -1,7 +1,7 @@
 {
-  "show": false,
+  "show": true,
   "id": "welcome-5",
-  "type": "update",
+  "type": "warning",
   "title": "Welcome to Pregna AI",
   "message": "we have some truble for now.",
   "titleAr": "مرحباً بكِ في امن AI",
